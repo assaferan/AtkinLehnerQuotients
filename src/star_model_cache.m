@@ -134,11 +134,9 @@ function CanonicalModelFromForms(fs_full, Np)
         error if number_of_terms ge maxprec, "CanonicalModelFromForms: cached forms have too few terms";
         bas := [f + O(Rq.1^number_of_terms) : f in fs_full];
         Pg1<[z]> := PolynomialRing(Rationals(), g);
-        // See modelsX0Nstar.m's XZeroNstarWithForms for why g=4,5 are not
-        // special-cased to cubics-only: that silently produced a
-        // non-saturated ideal (missing the quadric Riemann-Roch guarantees
-        // exists). Quadrics first, cubics added only if that alone doesn't
-        // cut dimension to 1, matches g >= 6's already-correct handling.
+        // Same degree choice as XZeroNstarWithForms in modelsX0Nstar.m:
+        // quartic for g = 3, quadrics for g >= 4 with cubics added below
+        // when the quadrics leave the scheme of dimension > 1.
         if g eq 3 then
             d := 4;
         else
