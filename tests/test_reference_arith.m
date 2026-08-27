@@ -27,6 +27,14 @@
 // stored columns with zero drift, so a fully green run is the expected
 // result. If a mismatch appears here, that is a real finding about the
 // current code, report it, do not edit the expected value to match.
+//
+// Note: this checks for regression drift, not correctness. Every `special`
+// value below came from the same function it is compared against
+// (count_special_points_X0Nstar), so a bug already present when the table
+// was generated would pass here too. Only the 14 levels also covered by
+// tests/test_exceptional_tables.m (178, 183, 246, 290, 310, 318, 329, 430,
+// 455, 510, 137, 311, 370, 399) are cross-checked against the paper's
+// tables there; the other 184 are not.
 
 load "src/AtkinLehner.m";
 load "tests/assertions.m";
