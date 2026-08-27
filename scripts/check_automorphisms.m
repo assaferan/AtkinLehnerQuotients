@@ -1,67 +1,52 @@
 // scripts/check_automorphisms.m
 //
 // Verifies the "Automorphism" column of the paper's genus 3 and 4 exceptional
-// point tables.  That column is the one thing tests/test_exceptional_tables.m
-// explicitly does not reproduce, so it is currently unchecked.
-//
-// For each level, the claim being tested is: some non-identity automorphism of
-// X_0^*(N) carries a special point (rational CM point or the cusp) to the
-// exceptional point.  That is what "explained by an automorphism" means in the
-// paper -- not merely that Aut is nontrivial.
+// point tables: for each level, whether some non-identity automorphism of
+// X_0^*(N) carries a special point (a rational CM point or the cusp) to the
+// exceptional point. tests/test_exceptional_tables.m does not check this
+// column, so this script is the only place it is verified.
 //
 // Run from the repo root:
 //     magma scripts/check_automorphisms.m
 // or inside a session:
 //     load "scripts/check_automorphisms.m";
 //
-// Method: rather than compute the full automorphism group with Magma's
-// AutomorphismGroup(Crv) -- which for a canonically embedded (non-
-// hyperelliptic) curve has no fast path and can run for well over 17 minutes
-// without finishing even the first of the 14 levels below, since none of them
-// are hyperelliptic -- this searches directly, for each candidate pair
-// (special point, exceptional point), for a single linear automorphism T of
-// the ambient P^{n-1} that both preserves the curve's defining ideal and
-// sends that special point to that exceptional point.  That is a much
-// smaller question than computing the whole group, and resolves in well
-// under a second per pair for the genus-3 (single-generator) levels; the
-// genus-4 levels, whose defining ideal is a several-dimensional space of
-// same-degree forms rather than a complete intersection, take longer (see
-// FindLinAutoMappingPoint below for why, and how that case is handled).
+// Method: computing the full automorphism group with Magma's
+// AutomorphismGroup(Crv) has no fast path for a canonically embedded curve
+// and is too slow to finish for these levels. Instead, for each candidate
+// pair (special point, exceptional point), this searches directly for a
+// single linear automorphism T of the ambient P^{n-1} that both preserves
+// the curve's defining ideal and sends the special point to the exceptional
+// point -- a much smaller question, and fast (well under a second per pair
+// for genus 3; longer for genus 4, see FindLinAutoMappingPoint below).
 //
-// This assumes X is canonically embedded (its DefiningPolynomials cut it out
-// of a plane/space by an automorphism-equivariant linear action on the
-// ambient coordinates), which holds for every non-hyperelliptic level here.
-// A hyperelliptic level would need a different search, since its model does
-// not carry automorphisms as linear actions on the same ambient coordinates.
+// Assumes X is canonically embedded, i.e. DefiningPolynomials cuts it out of
+// projective space by a linear action on the ambient coordinates -- true for
+// every non-hyperelliptic level here. A hyperelliptic level would need a
+// different search.
 
 load "src/AtkinLehner.m";
 
 // ---------------------------------------------------------------------------
-// Targeted linear-automorphism search (see file header for the "why").
+// Targeted linear-automorphism search (see file header for why this is used
+// instead of the full automorphism group).
 //
-// gens: SeqEnum of homogeneous polys generating the ideal of X.  These need
-// not be a minimal/complete-intersection generating set: if several share a
-// degree (e.g. Magma hands back a 5-dimensional space of cubics through the
-// N=370 genus-4 model, not two complete-intersection generators), an
-// automorphism need only preserve their common SPAN V_d in each degree d,
-// not fix each one individually.  Rather than introduce a mixing matrix
-// (which blows up the unknown count with the number of generators -- for
-// N=370's 5 cubics that made the search over 1000x slower and it still
-// didn't finish), that condition is imposed directly and cheaply:
-// precompute, once per degree class, a basis of linear functionals
-// annihilating V_d (the left null space of the generators' coefficient
-// matrix); "phi(g_i) in V_d" is then just those functionals applied to
-// phi(g_i)'s coefficient vector, equal to zero -- equations purely in the
-// T-unknowns, no per-generator mixing variables needed at all.
+// gens: SeqEnum of homogeneous polys generating the ideal of X. These need
+// not be a minimal generating set: when several share a degree (e.g. the
+// N=370 genus-4 model has a 5-dimensional space of cubics, not two
+// complete-intersection generators), an automorphism only needs to preserve
+// their common span V_d in each degree d, not fix each generator
+// individually. That condition is imposed directly: for each degree d,
+// precompute a basis of linear functionals annihilating V_d (the left null
+// space of the generators' coefficient matrix); "phi(g_i) in V_d" is then
+// just those functionals applied to phi(g_i)'s coefficient vector, equal to
+// zero -- equations purely in the unknown entries of T.
 //
-// V_d must be the FULL degree-d graded piece of the ideal, not just
+// V_d must be the full degree-d graded piece of the ideal, not just
 // span{gens of degree exactly d}: it also contains every (monomial of
 // degree d - deg(g)) * g for every generator g of degree <= d (e.g. z_i *
 // (the quadric) is a genuine degree-3 element of the ideal even though it
-// is not among the "new" degree-3 generators Magma reports). Omitting
-// those multiples made an earlier version of this annihilator too small,
-// over-constraining phi(g_i) to a smaller subspace than the true ideal
-// allows and producing false negatives.
+// is not among the "new" degree-3 generators Magma reports).
 //
 // n: ambient dimension (rank of the polynomial ring)
 // p_from, p_to: SeqEnum[FldRatElt] of length n, homogeneous coordinates.
@@ -97,19 +82,14 @@ function FindLinAutoMappingPoint(gens, p_from, p_to : verbose := false)
                 end for;
             end if;
         end for;
-        // NB: Magma's [f(i,j) : i in S1, j in S2] varies i FASTEST (the
+        // NB: Magma's [f(i,j) : i in S1, j in S2] varies i FASTEST -- the
         // first-listed variable is the inner/fast loop, the last-listed is
-        // the outer/slow one) -- the opposite of the usual left-to-right
+        // the outer/slow one, the opposite of the usual left-to-right
         // nested-loop reading. j (spanvecs, matching Matrix's columns) must
         // be listed first so consecutive #spanvecs-sized runs fill one row
-        // at a time; get this backwards and Matrix()'s row-by-row fill
-        // silently scrambles the entries into a nonsense matrix that still
-        // parses and computes -- this exact bug spuriously rejected a
-        // genuine automorphism at N=370, independently confirmed via
-        // Magma's own AutomorphismGroup(X) (which found #Aut = 2 and, when
-        // evaluated directly at the curve's rational points, sends the CM
-        // disc -4 point to the exceptional point -- exactly the witness
-        // the paper claims).
+        // at a time; swapping the order silently scrambles the matrix
+        // entries into something that still parses and computes, just not
+        // the intended matrix.
         M := Matrix(Rationals(), #mons, #spanvecs,
                      [MonomialCoefficient(spanvecs[j], mons[i]) : j in [1..#spanvecs], i in [1..#mons]]);
         NS := NullSpace(M); // {L : L*M = 0}, L of length #mons
@@ -206,9 +186,9 @@ function FindLinAutoMappingPoint(gens, p_from, p_to : verbose := false)
 end function;
 
 // ---------------------------------------------------------------------------
-// Expected values, transcribed from the paper's tables.  Genus 4's N = 370
-// row was corrected from (-136, -84, -16) after the repo's own run; see the
-// collinearity column of tests/test_exceptional_tables.m.
+// Expected values, transcribed from the paper's tables. The genus-4 N=370
+// row uses the corrected triple, not the one in the current paper draft;
+// see the collinearity column of tests/test_exceptional_tables.m.
 EXPECTED := AssociativeArray();
 EXPECTED[178] := true;   EXPECTED[183] := true;   EXPECTED[246] := true;
 EXPECTED[290] := true;   EXPECTED[310] := false;  EXPECTED[318] := true;
@@ -222,8 +202,8 @@ GENUS4 := [137, 311, 370, 399];
 
 MAX_CLASS_NUM := 8;
 
-// N=399's D=-3 CM point does not converge at the default eval_prec=3000
-// ("half-length series disagrees with full-length series"); 6000 resolves it.
+// N=399's D=-3 CM point needs eval_prec=6000 to converge; the default
+// 3000 is not enough at this level.
 EVAL_PREC := AssociativeArray();
 EVAL_PREC[399] := 6000;
 
@@ -239,9 +219,8 @@ function AutomorphismExplains(N : B := 1000, eval_prec := 3000)
     interesting := check_exceptional_example(N : B := B, eval_prec := eval_prec);
     entry  := interesting[1];
     // Guard on entry[2] (n, the exceptional-point count), not #interesting:
-    // check_exceptional_example always appends exactly one entry regardless of
-    // how many exceptional points it actually found, so a #interesting test can
-    // never fire.
+    // check_exceptional_example always returns exactly one entry, so
+    // #interesting is always 1.
     error if entry[2] eq 0,
         Sprintf("N = %o: no exceptional point found", N);
     rats   := entry[3];

@@ -5,10 +5,9 @@
 // hand-entered discriminants and the ramified/unramified annotations can be
 // diffed against the computation.
 //
-// This table is currently pinned by nothing: tests/test_triple_covers.m
-// exercises AnalyzeCMFiber and SweepCMFibers but does not assert the table's
-// contents, and the one other hand-entered table we checked (genus 4, N = 370)
-// was wrong.
+// This table is not checked anywhere else: tests/test_triple_covers.m
+// exercises AnalyzeCMFiber and SweepCMFibers but does not assert this
+// table's contents against the paper.
 //
 // Run from the repo root:
 //     magma scripts/check_fiber_table.m
