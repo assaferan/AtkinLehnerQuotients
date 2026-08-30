@@ -30,8 +30,10 @@ Most scripts end in `quit;`/`exit;`, so they are batch-only; `certify_committed_
 and `make_plane_multiplicity_table.m` do not and can also be `load`ed in a session.
 
 - `load "src/AtkinLehner.m";` pulls in `QuadraticPoints/models_and_maps.m` plus
-  11 of the 13 src modules, in dependency order. The modules are not loadable
-  standalone (each header says so).
+  11 of the 13 src modules, in dependency order. Each header says whether the
+  module is loadable standalone: most are not, but `cm_points.m`, `cm_orders.m`
+  and `cm_numerics.m` are self-contained (`tests/test_cm_points.m` loads
+  `cm_points.m` directly).
 - `src/triple_covers.m` loads `AtkinLehner.m` itself — load it *instead*, not after.
 - `src/hnf_canonical.m` is not in the chain: load it *after* `AtkinLehner.m`, so
   `all_diag_basis` and `modelsX0Nstar.m`'s helpers are already declared.
@@ -77,11 +79,18 @@ casually: `--slow` is ~43 min, dominated by `test_311_jmap`.
   `pointsearch_examples.m`, `pointsearch_g8.m` + `run_pointsearch_g8.sh`.
   `cm_terms_overrides.m` is a lookup table `load`ed by two scripts, not a script.
 - `tests/` — one `test_*.m` per topic, `assertions.m` (shared), `run.sh`,
-  and `logs/` (transcripts — **committed**, so a test run dirties the worktree).
+  and `logs/` (transcripts, git-ignored).
 - `data/` — `genus3_models.m`..`genus8_models.m` (one `models[N]` record per
   squarefree level, HNF basis, all curves in one shared `P`),
   `triple_cover_classification.txt`, and `starmodels/` (cache; all 148 files are
   git-tracked).
+
+Paper artifacts: `scripts/make_exceptional_table.m` reproduces the paper's
+exceptional-points table (~20 min; `fast:=1` for the ~1 min subset).
+`scripts/make_plane_multiplicity_table.m` emits the supplementary
+collinearity-plane table as LaTeX. `data/triple_cover_classification.txt`
+matches the paper's triple-cover table; `tests/test_triple_cover_table.m` pins
+the two against each other.
 
 ## Gotchas
 
@@ -101,8 +110,10 @@ casually: `--slow` is ~43 min, dominated by `test_311_jmap`.
   If you regenerate `starforms_<M>.m`, delete every `map_<M>_*.m`.
 - **Cache hit vs. live basis.** On a hit, the returned `Sstar` is a frozen
   fixed-precision series list; `BoostFsPrec` cannot extend it (fails soft, returns
-  `[]`). So `point_search_X0Nstar` returns a 4th value (the live basis, empty on a
-  hit), and `retry_precision_failures` recovers by rebuilding with `UseCache := false`.
+  `[]`). So `StarModelWithForms` returns a 4th value (the live basis, empty on a
+  hit), `point_search_X0Nstar`'s returned `Sstar` prefers the live basis when one
+  was built, and `retry_precision_failures` recovers by rebuilding with
+  `UseCache := false`.
 - **`eval_prec` / precision retries.** Default 3000 terms. Labeling failures carry a
   `fail_reason` containing `"needs higher eval_prec"`;
   `retry_precision_failures(results, interesting)` re-runs exactly those at 7000.
@@ -134,6 +145,19 @@ casually: `--slow` is ~43 min, dominated by `test_311_jmap`.
   in `point_search.m` are `snake_case` (`check_exceptional_example`). Keep the split.
 - Every src file opens with a header naming its **entry points**, its dependencies,
   and whether it is loadable standalone. Preserve this; headers explain *why*.
+- Comments are short, in plain language, and avoid jargon; the file-top
+  headers especially should read easily for someone new to the repo. No
+  em-dashes in comments.
+- Comments describe the present state of the code, never its history: no
+  "this used to...", no citing removed functions or prior versions. If a past
+  bug matters, state the invariant it revealed, not the story of fixing it.
+- Cite the theorem, don't reprove it: "quadrics cut out the canonical curve
+  unless it is trigonal or a plane quintic (Petri)" is the right scale for a
+  math comment.
+- Inline comments state constraints the code cannot show (why
+  `Nonsingular := true` is valid, why an existing cache entry is not
+  rewritten), not what the next line does. The exception is a genuinely
+  unclear line, where saying what it does is appropriate.
 - Results are passed as tuples and `[* *]` lists in a fixed order — e.g.
   `check_exceptional_example` entries are `<N, n, rats, X, fs, Sstar, cm_pts>` and
   `analyze_exceptional` returns `<N, exc, planes, all_matched, fail_reason>`.
