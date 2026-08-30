@@ -15,10 +15,23 @@ name: tests
 #    distinction for free.
 
 on:
+  # push covers main only: PR branches are covered by pull_request_target, and
+  # push-on-'**' would run the whole multi-hour matrix a second time per commit.
   push:
-    branches: [ '**' ]
+    branches: [ main ]
 
   pull_request_target:
+
+# One live run per PR (or per branch for push events); a force-push cancels
+# the superseded run instead of leaving its whole matrix going for hours.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+env:
+  # The single Magma cache key for every job.  Increase to reset the cache
+  # when MAGMA_URL changes.
+  MAGMA_CACHE_NUMBER: 2.29-4
 
 jobs:
 
@@ -41,6 +54,15 @@ jobs:
 
       - id: set-matrix
         run: |
+          # Refuse to build a matrix from any filename that could smuggle shell
+          # metacharacters into the test job (this file runs under pull_request_target).
+          for f in tests/test_*.m; do
+            b=$(basename "$f" .m)
+            if ! [[ "$b" =~ ^test_[A-Za-z0-9_]+$ ]]; then
+              echo "::error::refusing suspicious test filename: $f"
+              exit 1
+            fi
+          done
           matrix=$( (
             echo '{ "target" : ['
             ls -1 tests/test_*.m | xargs -n1 basename | sed 's/\.m$//' \
@@ -75,38 +97,18 @@ jobs:
     needs: has_access
     if: needs.has_access.outputs.has_access == 'true'
     steps:
-      - name: Cache magma
-        uses: actions/cache@v4
-        id: magmacache
-        env:
-          # Keep in sync with CACHE_NUMBER in the test job below.
-          CACHE_NUMBER: 2.29-4
-        with:
-          path: ./magma
-          key: ${{ env.CACHE_NUMBER }}
+      # A plain checkout (no ref) always takes the BASE repository's code, so
+      # under pull_request_target this job never executes anything from the PR
+      # head -- it exists only to warm the cache with the base's installer.
+      - uses: actions/checkout@v4
 
       - name: Install magma
-        env:
-          MAGMA_URL: ${{ secrets.MAGMA_URL }}
-          MAGMA_USERNAME: ${{ secrets.MAGMA_USERNAME }}
-          MAGMA_PASSWORD: ${{ secrets.MAGMA_PASSWORD }}
-        shell: bash
-        if: steps.magmacache.outputs.cache-hit != 'true'
-        run: |
-          # Bounded timeout so a stalled connection fails fast instead of
-          # hanging, with backoff retries.  --no-verbose (not --quiet) keeps the
-          # actual wget error in the log.
-          for attempt in 1 2 3 4 5; do
-            if wget "$MAGMA_URL" -O magma.tar.gz \
-                 --user="$MAGMA_USERNAME" --password="$MAGMA_PASSWORD" \
-                 --timeout=120 --tries=3 --waitretry=30 --retry-connrefused --no-verbose; then
-              if tar xf magma.tar.gz; then break; fi
-            fi
-            echo "::warning::magma download/extract attempt $attempt failed; backing off $((attempt*30))s"
-            rm -f magma.tar.gz
-            sleep $((attempt * 30))
-          done
-          test -x ./magma/magma
+        uses: ./.github/actions/install-magma
+        with:
+          magma-url: ${{ secrets.MAGMA_URL }}
+          magma-username: ${{ secrets.MAGMA_USERNAME }}
+          magma-password: ${{ secrets.MAGMA_PASSWORD }}
+          cache-key: ${{ env.MAGMA_CACHE_NUMBER }}
 
   test:
     runs-on: ubuntu-latest
@@ -114,9 +116,11 @@ jobs:
     needs: [has_access, matrix, prime-magma]
     if: needs.has_access.outputs.has_access == 'true'
 
-    # The slow suites can run for hours; the default 360-minute ceiling is
-    # GitHub's hard job limit, so a suite that exceeds it needs to be run
-    # locally rather than here.
+    # The slow suites can run for hours.  The step-level timeout on "Run test
+    # suite" (340) is the one that normally fires: a step timeout FAILS the
+    # step, so the transcript upload below still runs.  The job-level ceiling
+    # is only a backstop (GitHub's hard limit is 360), and a suite that
+    # exceeds it needs to be run locally rather than here.
     timeout-minutes: 350
 
     strategy:
@@ -131,14 +135,14 @@ jobs:
       # move it after the checkout.
       - name: Check user permission
         id: check
-        uses: scherermichael-oss/action-has-permission@master
+        uses: scherermichael-oss/action-has-permission@17f29510f1bf987b916c8cbb451566a56eed23f1 # master, pinned 2026-08-30
         with:
           required-permission: write
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Stop workflow for users with no write access
-        if: "! steps.check.outputs.has-permission"
+        if: steps.check.outputs.has-permission != '1'
         run: |
           echo "Sorry! Your permissions are insufficient."
           false
@@ -156,36 +160,18 @@ jobs:
           ref: ${{ github.event.pull_request.head.sha }}
           submodules: recursive
 
-      - name: Cache magma
-        uses: actions/cache@v4
-        id: magmacache
-        env:
-          # Increase this value to reset the cache when MAGMA_URL changes.
-          CACHE_NUMBER: 2.29-4
-        with:
-          path: ./magma
-          key: ${{ env.CACHE_NUMBER }}
-
+      # NOTE: on a pull_request_target run this local action comes from the
+      # checked-out PR head.  That is within the existing trust model -- the
+      # permission gate above already ensures only write-access users reach
+      # this point, after which head code runs with secrets regardless.
+      # Fallback: normally skipped because prime-magma warmed the cache.
       - name: Install magma
-        env:
-          MAGMA_URL: ${{ secrets.MAGMA_URL }}
-          MAGMA_USERNAME: ${{ secrets.MAGMA_USERNAME }}
-          MAGMA_PASSWORD: ${{ secrets.MAGMA_PASSWORD }}
-        shell: bash
-        if: steps.magmacache.outputs.cache-hit != 'true'
-        run: |
-          # Fallback: normally skipped because prime-magma warmed the cache.
-          for attempt in 1 2 3 4 5; do
-            if wget "$MAGMA_URL" -O magma.tar.gz \
-                 --user="$MAGMA_USERNAME" --password="$MAGMA_PASSWORD" \
-                 --timeout=120 --tries=3 --waitretry=30 --retry-connrefused --no-verbose; then
-              if tar xf magma.tar.gz; then break; fi
-            fi
-            echo "::warning::magma download/extract attempt $attempt failed; backing off $((attempt*30))s"
-            rm -f magma.tar.gz
-            sleep $((attempt * 30))
-          done
-          test -x ./magma/magma
+        uses: ./.github/actions/install-magma
+        with:
+          magma-url: ${{ secrets.MAGMA_URL }}
+          magma-username: ${{ secrets.MAGMA_USERNAME }}
+          magma-password: ${{ secrets.MAGMA_PASSWORD }}
+          cache-key: ${{ env.MAGMA_CACHE_NUMBER }}
 
       # Magma's licence is keyed to a MAC address, so give the runner a dummy
       # interface carrying one of the addresses this licence accepts.  The bare
@@ -201,14 +187,21 @@ jobs:
       # Single-suite mode exits 0 only on PASS, so FAIL and INCOMPLETE both fail
       # the job.
       - name: Run test suite
+        id: run-tests
         shell: bash
+        timeout-minutes: 340
+        env:
+          TARGET: ${{ matrix.target }}
         run: |
-          MAGMA="$PWD/magma/magma" tests/run.sh ${{ matrix.target }}
+          # $TARGET arrives via env, never via template interpolation, so a
+          # hostile value cannot rewrite this script; re-validate it anyway.
+          [[ "$TARGET" =~ ^test_[A-Za-z0-9_]+$ ]]
+          MAGMA="$PWD/magma/magma" tests/run.sh "$TARGET"
 
-      - name: Upload transcript on failure
-        if: failure()
+      - name: Upload transcript when the suite fails
+        if: always() && (steps.run-tests.outcome == 'failure' || steps.run-tests.outcome == 'cancelled')
         uses: actions/upload-artifact@v4
         with:
           name: log-${{ matrix.target }}
           path: tests/logs/${{ matrix.target }}.log
-          if-no-files-found: warn
+          if-no-files-found: error
