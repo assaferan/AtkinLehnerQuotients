@@ -26,8 +26,9 @@ magma -b B:=100000 shard:=1 nshards:=8 scripts/pointsearch_g8.m
 bash scripts/run_pointsearch_g8.sh                    # 8 shards in parallel, then concatenates
 ```
 
-Most scripts end in `quit;`/`exit;`, so they are batch-only; `certify_committed_models.m`
-and `make_plane_multiplicity_table.m` do not and can also be `load`ed in a session.
+Most scripts end in `quit;`/`exit;`, so they are batch-only; `certify_committed_models.m`,
+`check_automorphisms.m`, `check_fiber_table.m` and `make_plane_multiplicity_table.m`
+do not and can also be `load`ed in a session.
 
 - `load "src/AtkinLehner.m";` pulls in `QuadraticPoints/models_and_maps.m` plus
   11 of the 13 src modules, in dependency order. Each header says whether the
@@ -76,13 +77,16 @@ casually: `--slow` is ~43 min, dominated by `test_311_jmap`.
   `certify_committed_models.m`, `classify_triple_covers.m` (writes
   `data/triple_cover_classification.txt`), `run_triple_covers.m`,
   `make_exceptional_table.m`, `make_plane_multiplicity_table.m`,
-  `pointsearch_examples.m`, `pointsearch_g8.m` + `run_pointsearch_g8.sh`.
+  `pointsearch_examples.m`, `pointsearch_g8.m` + `run_pointsearch_g8.sh`,
+  `check_automorphisms.m` (verifies the paper tables' Automorphism column),
+  `check_fiber_table.m` (regenerates the paper's CM-fiber table), and the
+  one-off `automorphisms_<N|genus g>.m` automorphism checks.
   `cm_terms_overrides.m` is a lookup table `load`ed by two scripts, not a script.
 - `tests/` — one `test_*.m` per topic, `assertions.m` (shared), `run.sh`,
   and `logs/` (transcripts, git-ignored).
 - `data/` — `genus3_models.m`..`genus8_models.m` (one `models[N]` record per
   squarefree level, HNF basis, all curves in one shared `P`),
-  `triple_cover_classification.txt`, and `starmodels/` (cache; all 148 files are
+  `triple_cover_classification.txt`, and `starmodels/` (cache; all 151 files are
   git-tracked).
 
 Paper artifacts: `scripts/make_exceptional_table.m` reproduces the paper's
@@ -97,9 +101,9 @@ the two against each other.
 - **Submodule.** `QuadraticPoints/` is a git submodule
   (`sachihashimoto/QuadraticPoints`). Without `git submodule update --init`, the
   first `load "QuadraticPoints/models_and_maps.m"` dies with `Could not open file`.
-- **`outputs/` does not exist in the repo** and no `.m` script creates it. Scripts
-  writing there (`gen_genus_models.m` progress file, `pointsearch_*.m`) need it
-  made first; only `run_pointsearch_g8.sh` does its own `mkdir -p`.
+- **`outputs/` is git-ignored and created on demand**: each script that writes
+  there (`gen_genus_models.m`, `pointsearch_*.m`, `run_pointsearch_g8.sh`) runs
+  its own `mkdir -p outputs` first.
 - **Star-forms cache read vs. write.** `StarModelWithForms` reads
   `data/starmodels/starforms_<N>.m` by default (that AL diagonalization is nearly
   all the cost of a level). It creates an absent entry, but an existing entry that

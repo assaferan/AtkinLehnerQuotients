@@ -103,8 +103,18 @@ function CertifyEquationsAgainstCache(equations, fs_full, Np)
     error if maxprec le B_max,
         Sprintf("CanonicalModelFromForms: cached forms have too few terms to certify, need precision > %o (Sturm bound for weight %o on Gamma_0(%o)), got %o",
                 B_max, Max(weights), Np, maxprec);
+    // Certification only ever looks at coefficients up to B_max, so evaluating
+    // on the whole cache entry does strictly more work for the same valuation
+    // test.  Truncating ties the cost to the Sturm bound rather than to
+    // whatever precision the cache happens to hold (entries here run from 3000
+    // to 9000 terms).  Unlike the hyperelliptic path below this is not a
+    // measurable speedup at present sizes -- every f_i has positive valuation
+    // and there is no division, so nothing here was ever precision-critical.
+    work := Minimum(maxprec, B_max + 1 + 20);
+    Rq := Parent(fs_full[1]);
+    bas_cert := [f + O(Rq.1^work) : f in fs_full];
     for e in equations do
-        val := Evaluate(e, fs_full);
+        val := Evaluate(e, bas_cert);
         ok, _ := CertifyModularIdentity(val, Np, 2*Degree(e));
         if not ok then
             return false;
@@ -124,10 +134,11 @@ function CanonicalModelFromForms(fs_full, Np)
         error if number_of_terms ge maxprec, "CanonicalModelFromForms: cached forms have too few terms";
         bas := [f + O(Rq.1^number_of_terms) : f in fs_full];
         Pg1<[z]> := PolynomialRing(Rationals(), g);
+        // Same degree choice as XZeroNstarWithForms in modelsX0Nstar.m:
+        // quartic for g = 3, quadrics for g >= 4 with cubics added below
+        // when the quadrics leave the scheme of dimension > 1.
         if g eq 3 then
             d := 4;
-        elif g eq 4 or g eq 5 then
-            d := 3;
         else
             d := 2;
         end if;
@@ -140,7 +151,7 @@ function CanonicalModelFromForms(fs_full, Np)
         end function;
         equations := relsOfDeg(d);
         X0_N_Scheme := Scheme(ProjectiveSpace(Pg1), equations);
-        if (g ge 6) and (Dimension(X0_N_Scheme) ne 1) then
+        if (g ge 4) and (Dimension(X0_N_Scheme) ne 1) then
             equations cat:= relsOfDeg(3);
             X0_N_Scheme := Scheme(ProjectiveSpace(Pg1), equations);
         end if;
@@ -174,6 +185,25 @@ function HyperellipticModelFromForms(fs_full, Np)
                 B_hyp, weight, Np, maxprec);
 
     t := Minimum(Floor(Index(Gamma0(Np)) * g / 6), maxprec - 3);
+    // Everything below is series arithmetic whose cost is quadratic in the
+    // truncation length, on coefficients the size of a degree-(2g+2) product
+    // of weight-2 forms, so running it at the cache's precision costs more than
+    // the diagonalization this path exists to avoid.  Two separate constraints
+    // set how far it can be truncated:
+    //   certification needs one term past B_hyp;
+    //   the solve needs work >= t + 3g + 3.
+    // The second is the subtle one.  The solve reads t terms of x^(2g+2) and of
+    // y2q, but x = f_{g-1}/f_g loses g digits of relative precision to the
+    // division before the (2g+2)-nd power shifts by 2g+2 more, so it consumes
+    // 3g+3 terms of fg1c/fgc beyond t.  Since B_hyp = Floor(Index*(g+1)/3)
+    // strictly exceeds t = Floor(Index*g/6) at every genus, B_hyp + 21 covers
+    // both, clearing the solve's requirement by about Index*(g+2)/6.
+    // Do not retighten to t + 21 on the strength of the first constraint alone:
+    // that satisfies the second only for g <= 6 (tight at 6), and past there it
+    // aborts in Coefficient rather than returning a wrong model.
+    work := Minimum(maxprec, Max(t, B_hyp) + 1 + 20);
+    fg1c := fg1c + O(qc^work);
+    fgc  := fgc  + O(qc^work);
 
     Dfg1c := qc * Derivative(fg1c);
     Dfgc  := qc * Derivative(fgc);
