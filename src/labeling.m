@@ -1190,7 +1190,7 @@ function AlgebraicDeg2Matches(X, plane_eqn, deg2pts, N, fs, ell_pts, disc_ell_pt
         if Degree(comp) ne 2 then continue; end if;
         comp_idx +:= 1;
         _, split_fld := PointsOverSplittingField(comp);
-        comp_nf := NumberField(AbsolutePolynomial(split_fld));
+        comp_nf := NumberField(DefiningPolynomial(AbsoluteField(split_fld)));
         pts_K   := RationalPoints(BaseChange(comp, comp_nf));
         if #pts_K ne 2 then
             // Non-reduced or tangential intersection, so the component is not a
