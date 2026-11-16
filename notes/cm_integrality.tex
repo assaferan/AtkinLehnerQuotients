@@ -362,13 +362,48 @@ zero.  Then one, and so each, $n_F(\tau_j)$ vanishes, that is
 $F^{[e]}(\tau_j)=0$; by \eqref{eq:phi-ell} and linearity this is the claim.
 \end{proof}
 
+\begin{proposition}[Polynomials in the forms]\label{prop:poly}
+Let $P\in\Z[X_1,\dots,X_g]$ be homogeneous of degree $m$, and let $x$, $h$,
+$x_j$, $\tau_j$ be as in Corollary~\ref{cor:vanish}, with common order $e$.  Put
+\[
+\nu_P(\tau)=\Bigl(\frac{\sqrt N\,\im\tau}{T(\tau)}\Bigr)^{em}\,
+\bigl\lvert P\bigl(f_1^{[e]}(\tau),\dots,f_g^{[e]}(\tau)\bigr)\bigr\rvert .
+\]
+Then $\nu_P(\tau_1)^{6\sz(N)}$ is the absolute value of an algebraic integer in
+$\Q(x)$ whose conjugates have absolute values $\nu_P(\tau_j)^{6\sz(N)}$.  In
+particular, if $\prod_{j}\nu_P(\tau_j)<1$, or if $\nu_P(\tau_1)M^{h-1}<1$ with
+$M\ge1$ a bound for $\nu_P$ on a finite Galois-stable set of CM points
+containing $x$, then $P$ vanishes at $\varphi(x_j)$ for every $j$.
+\end{proposition}
+\begin{proof}
+Let $H_i=12^{e-1}\vartheta_{2e-2}\circ\cdots\circ\vartheta_2f_i$, cusp-integral of
+weight $2e$ with $H_i(\tau_j)=f_i^{[e]}(\tau_j)$, as in the proof of
+Theorem~\ref{thm:elliptic}.  Products of cusp-integral forms are cusp-integral
+(the weights and the powers of $Q$ add), as are integral combinations of
+cusp-integral forms of equal weight; so $H=P(H_1,\dots,H_g)$ is cusp-integral of
+weight $2em$.  Theorem~\ref{thm:integral} with $k=2em$, $a=6\sz(N)$, $b=em$
+shows that $G=H^a/D_N^{\,em}$ takes an algebraic integer value at $\tau_j$, of
+absolute value $\nu_P(\tau_j)^{6\sz(N)}$.  For an Atkin--Lehner matrix $w$ the
+proof of Theorem~\ref{thm:elliptic} gives
+$f_i^{[e]}(w\tau_j)=\rho(\tau_j)^ef_i^{[e]}(\tau_j)$, hence
+$H(w\tau_j)=\rho(\tau_j)^{em}H(\tau_j)$ by homogeneity, while
+$D_N(w\tau_j)^{em}=\rho(\tau_j)^{6\sz(N)em}D_N(\tau_j)^{em}$.  So $G$ is constant
+on the fibres of $X_0(N)\to\Xs$ over the $x_j$, and the argument of
+Corollary~\ref{cor:vanish} applies.  Finally $P(\varphi(x_j))=0$ if and only if
+$P(f_1^{[e]}(\tau_j),\dots,f_g^{[e]}(\tau_j))=0$, by \eqref{eq:phi-ell}.
+\end{proof}
+
 \begin{remark}[Use]\label{rem:use}
 To prove that a rational point $P$ of the canonical model equals $\varphi(x)$
 for a rational CM point $x$, apply Corollary~\ref{cor:vanish} with $h=1$ to
 $g-1$ independent integral linear forms vanishing at $P$.  To prove that a
 rational hyperplane contains a conjugate pair of quadratic CM points, apply it
 with $h=2$; the pairing of the points need not be known, only a bound $M$ over
-all CM points of the same discriminant.  Rationality of $x$, or its degree,
+all CM points of the same discriminant.  To prove that a Galois-stable finite
+set $Z$ of points of the canonical model, given by homogeneous equations, is the
+set of images of the CM points of a given discriminant, apply
+Proposition~\ref{prop:poly} to each equation of $Z$ and compare cardinalities.
+Rationality of $x$, or its degree,
 is an input from the theory of complex multiplication.  The quantity $T(\tau)$ is
 computed from $\etanorm{d\tau}=\etanorm{z_d}$, with $z_d$ the root of the reduced
 binary quadratic form equivalent to that of $d\tau$; there
