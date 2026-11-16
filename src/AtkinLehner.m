@@ -18,4 +18,5 @@ load "src/cm_numerics.m";
 load "src/classify_covers.m";
 load "src/fields_of_definition.m";
 load "src/labeling.m";
+load "src/cm_certify.m";
 load "src/point_search.m";
