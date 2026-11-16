@@ -8,21 +8,20 @@
 // bound below 1 proves F vanishes there, and an upper bound in general bounds
 // the height of the point.
 //
-// Entry points:  CertifyRationalCMPoints(N, fs, rats, rat_cm_discs)
-//                CertifyRationalCMPoint(N, fs, Cs, P, form, e)
+// Entry points:  CertifyRationalCMPoint(N, fs, Cs, P, form, e)
 //                CertifyVanishingAtCM(N, fs, Cs, mvec, forms, e)
 //                CMHeightBounds(N, fs, Cs, form, e)
 //                DeligneConstants(fs, N)
 //
-// Depends on cm_points.m, cm_numerics.m and labeling.m (EllipticDiscsByOrder).
-// Not loadable standalone.
+// Depends on cm_points.m only. Not loadable standalone. The drivers that
+// apply these to a list of rational points are in labeling.m
+// (ProveRationalCMLabels, CertifyRationalCMPoints).
 //
 // Real numbers are enclosed in balls <mid, rad> with rational entries, and
-// complex numbers in discs <x, y, rad>. Nothing here uses floating point
-// except the finder in CertifyRationalCMPoints, which only proposes a point;
-// the proof never depends on it.
+// complex numbers in discs <x, y, rad>. Floating point is used only to choose
+// how many series terms to sum, never in a bound.
 //
-// The elliptic order e is an input taken from EllipticDiscsByOrder. An e that
+// The elliptic order e is an input (callers take it from EllipticDiscsByOrder). An e that
 // is too small is caught (every form then vanishes and the nonvanishing check
 // fails); an e that is too large is not detected here.
 
@@ -382,54 +381,4 @@ function CertifyRationalCMPoint(N, fs, Cs, P, form, e : Prec := 128)
         if CBAbsLower(sums[i], Prec) gt Cs[i]*tail then nonzero := true; break; end if;
     end for;
     return nonzero;
-end function;
-
-// For every rational CM discriminant of level N, find the rational point of
-// `rats` that is its image and prove the identification.
-//
-// rats: points of the canonical model (as from point_search_X0Nstar).
-// rat_cm_discs: Keys(RationalCMDiscs(N)).
-// Returns disc_to_idx (disc -> indices into rats, one per orbit, all proved)
-// and a list of <disc, orbit_id, reason> for anything not proved.
-//
-// The floating-point evaluation only proposes a candidate; when it proposes
-// none, the proved height bound says how far the point search would have to go.
-function CertifyRationalCMPoints(N, fs, rats, rat_cm_discs : Prec := 128, Verbose := true)
-    error if IsHyperellipticX0Nstar(N),
-        Sprintf("CertifyRationalCMPoints: level %o is hyperelliptic; only canonical models are supported", N);
-    Cs := DeligneConstants(fs, N);
-    ell_pts, disc_ell_pts := EllipticDiscsByOrder(N);
-    CC := ComplexField(60);
-    rats_cc := [[CC!c : c in Eltseq(P)] : P in rats];
-    disc_to_idx := AssociativeArray();
-    unproved := [* *];
-    used := {Integers()|};
-    for disc in Sort(Setseq(Set(rat_cm_discs))) do
-        e := EllipticOrderOfDisc(disc, ell_pts);
-        orbits := CMTauOrbits(disc, N, CC);
-        for oid in [1..#orbits] do
-            form := FixedPointForm(orbits[oid][1][2]);
-            ev := EvaluateAtCM(fs, orbits[oid][1][3], CC, disc, ell_pts, disc_ell_pts, N);
-            cands := #ev eq 0 select []
-                else [j : j in [1..#rats] | IsProjectivelyEquivalent(ev, rats_cc[j], 10^-10)];
-            if #cands ne 1 then
-                okb, hb := CMHeightBounds(N, fs, Cs, form, e : Prec := Prec);
-                Append(~unproved, <disc, oid, Sprintf("no unique candidate among the given points; proved coordinate bounds %o",
-                    okb select hb else "unavailable")>);
-                continue;
-            end if;
-            j := cands[1];
-            if CertifyRationalCMPoint(N, fs, Cs, Eltseq(rats[j]), form, e : Prec := Prec) then
-                error if j in used,
-                    Sprintf("N=%o: rats[%o] was proved to be two different CM points", N, j);
-                Include(~used, j);
-                if not IsDefined(disc_to_idx, disc) then disc_to_idx[disc] := [Integers()|]; end if;
-                Append(~disc_to_idx[disc], j);
-                if Verbose then printf "  disc = %o -> rats[%o] = %o (proved)\n", disc, j, rats[j]; end if;
-            else
-                Append(~unproved, <disc, oid, Sprintf("candidate rats[%o] not proved", j)>);
-            end if;
-        end for;
-    end for;
-    return disc_to_idx, unproved;
 end function;

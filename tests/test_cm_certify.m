@@ -95,7 +95,7 @@ printf "\n=== A plane through a conjugate pair (N=311, D=-123) ===\n";
 N := 311;
 rats, X, fs := point_search_X0Nstar(N, 1000);
 discs := Keys(RationalCMDiscs(N));
-d2i := CertifyRationalCMPoints(N, fs, rats, discs : Verbose := false);
+d2i := CertifyRationalCMPoints(N, fs, rats, discs);
 ell_pts, disc_ell_pts := EllipticDiscsByOrder(N);
 Cs := DeligneConstants(fs, N);
 // Hyperplanes through the D=-19 rational CM point and the D=-123 pair,
