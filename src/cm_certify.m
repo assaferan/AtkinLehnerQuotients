@@ -10,6 +10,7 @@
 //
 // Entry points:  CertifyRationalCMPoint(N, fs, Cs, P, form, e)
 //                CertifyVanishingAtCM(N, fs, Cs, mvec, forms, e)
+//                CertifyPolynomialsVanishAtCM(N, fs, Cs, polys, forms, h, e)
 //                CMHeightBounds(N, fs, Cs, form, e)
 //                DeligneConstants(fs, N)
 //
@@ -283,6 +284,7 @@ end function;
 
 // Rational upper bound for nu^sigma_0(N), where U bounds |F^[e](tau)| above
 // and L bounds prod ||eta||(d tau)^4 below. Uses that sigma_0(N) is even.
+// For a polynomial of degree m in the forms, pass e*m in place of e.
 function NuPowerUpper(N, form, e, U, L)
     s0 := NumberOfDivisors(N);
     error if IsOdd(s0), "NuPowerUpper: level 1 is not supported";
@@ -381,4 +383,56 @@ function CertifyRationalCMPoint(N, fs, Cs, P, form, e : Prec := 128)
         if CBAbsLower(sums[i], Prec) gt Cs[i]*tail then nonzero := true; break; end if;
     end for;
     return nonzero;
+end function;
+
+// Discs enclosing F_i^[e](tau) for each basis form, tail included, and the
+// lower bound for the eta product. ok = false if the series is too short.
+function CMValueDiscs(N, fs, Cs, form, e, p)
+    ok, sums, tail, L := CMEvaluationData(N, fs, form, e, p);
+    if not ok then return false, [], 0; end if;
+    return true, [<sums[i][1], sums[i][2], sums[i][3] + Cs[i]*tail> : i in [1..#fs]], L;
+end function;
+
+// Upper bound for |P(v_1, ..., v_g)| over the discs vals, P a polynomial with
+// integer coefficients.
+function PolyDiscUpper(P, vals, p)
+    z := <0/1, 0/1, 0/1>;
+    cs := Coefficients(P); ms := Monomials(P);
+    for t in [1..#cs] do
+        w := <1/1, 0/1, 0/1>;
+        ex := Exponents(ms[t]);
+        for i in [1..#ex] do
+            for k in [1..ex[i]] do w := CBMul(w, vals[i], p); end for;
+        end for;
+        z := CBAdd(z, CBScale(Integers()!cs[t], w));
+    end for;
+    return CBAbsUpper(z, p);
+end function;
+
+// Proves that every polynomial in polys vanishes at the canonical image of
+// every CM point in `forms`. polys: homogeneous polynomials over Q in g
+// variables (denominators are cleared here). `forms` must be a Galois-stable
+// set of CM points of elliptic order e, each of degree at most h over Q; the
+// pairing into conjugates need not be known. For a homogeneous P of degree m
+// the form P(f_1, ..., f_g) has weight 2m and the same integrality as the
+// linear case, with nu^sigma_0 = N^(em s0/2) Im(tau)^(em s0) |P|^s0 / L^(em);
+// a point's bound times the (h-1)-th power of the largest bound in the set
+// bounds the norm, so a product below 1 forces the value to vanish.
+function CertifyPolynomialsVanishAtCM(N, fs, Cs, polys, forms, h, e : Prec := 128)
+    data := [* *];
+    for form in forms do
+        ok, vals, L := CMValueDiscs(N, fs, Cs, form, e, Prec);
+        if not ok then return false; end if;
+        Append(~data, <form, vals, L>);
+    end for;
+    for P0 in polys do
+        if P0 eq 0 then continue; end if;
+        error if not IsHomogeneous(P0), "CertifyPolynomialsVanishAtCM: polynomial is not homogeneous";
+        P := P0*LCM([Denominator(c) : c in Coefficients(P0)]);
+        m := TotalDegree(P);
+        pows := [NuPowerUpper(N, d[1], e*m, PolyDiscUpper(P, d[2], Prec), d[3]) : d in data];
+        M := Maximum([1] cat pows);
+        if exists{x : x in pows | x*M^(h - 1) ge 1} then return false; end if;
+    end for;
+    return true;
 end function;

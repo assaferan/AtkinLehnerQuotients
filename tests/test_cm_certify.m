@@ -114,4 +114,32 @@ for pl in planes do
         Sprintf("N=311: perturbed plane %o is not certified", bad));
 end for;
 
+printf "\n=== Degree-2 components of plane sections are proved (N=137, 311) ===\n";
+for N in [137, 311] do
+    res := check_exceptional_example(N);
+    X := res[1][4]; fs := res[1][5];
+    out := analyze_exceptional(res);
+    planes := out[1][3];
+    ell_pts := EllipticDiscsByOrder(N);
+    Cs := DeligneConstants(fs, N);
+    all_proved := &join[{m[2] : m in p[13]} : p in planes];
+    AssertEqual(~results, #all_proved ge 2, true, Sprintf("N=%o: at least two quadratic CM discs proved (%o)", N, all_proved));
+    for p in planes do
+        // Everything the numerical matching confirmed is also proved.
+        AssertEqual(~results, {<m[1], m[2]> : m in p[13]}, {<m[1], m[2]> : m in p[9]},
+            Sprintf("N=%o plane %o: proved matches equal confirmed matches", N, p[2]));
+        // Negative control: the CM points of a different disc do not satisfy
+        // the equations of a proved component.
+        comps := [c : c in IrreducibleComponents(Scheme(AmbientSpace(X), DefiningEquations(X) cat [p[2]])) | Degree(c) eq 2];
+        for m in p[13] do
+            for d in all_proved diff {m[2]} do
+                AssertEqual(~results,
+                    CertifyPolynomialsVanishAtCM(N, fs, Cs, DefiningPolynomials(comps[m[1]]), CMOrbitForms(d, N),
+                        Integers()!DegreeOfFieldOfDefinitionOfCMPoint(N, d), EllipticOrderOfDisc(d, ell_pts)),
+                    false, Sprintf("N=%o plane %o component %o (D=%o): D=%o is not certified", N, p[2], m[1], m[2], d));
+            end for;
+        end for;
+    end for;
+end for;
+
 Report(~results, "test_cm_certify");
