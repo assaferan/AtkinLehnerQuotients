@@ -104,8 +104,17 @@ $F(\tau)$ needs; Section~\ref{sec:num} records numerical checks.
 
 The proof is the standard argument that a modular function which is holomorphic
 on $\HH$ and has integral expansions at all cusps is integral over $\Z[j]$,
-combined with the integrality of singular moduli; see
-\cite[Ch.~5]{Lang}, \cite[\S11]{Cox}, \cite{Schertz}.  For functions whose divisor
+combined with the integrality of singular moduli.  The first statement is
+\cite[Ch.~2, \S2, Lemma~2.1]{KubertLang}; the second is
+\cite[Ch.~5, \S2, Thm.~4]{Lang}, \cite[Thm.~11.1]{Cox}.  For squarefree level
+and functions whose images under all Atkin--Lehner involutions have integral
+expansions at $\infty$, the resulting integrality of CM values is
+\cite[Lemmas~4.3 and~4.4]{BruinierOno}, which gives the integrality in
+Theorem~\ref{thm:main-intro} once the function $F^{6\sz(N)}/D_N$ is written
+down.  What is added here is the choice of $D_N$, the formula for the absolute
+value and the resulting height bound and vanishing test, and the version at
+elliptic points, where the relevant form is not Atkin--Lehner invariant.  For
+functions whose divisor
 is supported on CM points and cusps far more is known, namely the prime
 factorization of the values \cite{GrossZagier}; the forms $F$ here have zeros at
 arbitrary points, so only integrality is available, and it is all that is needed.
@@ -153,7 +162,7 @@ $H((\tau+j)/Q)=\sum_n a_n\zeta_Q^{nj}q^{n/Q}$.
 \begin{lemma}\label{lem:delta}
 Let $\Delta_d(\tau)=\Delta(d\tau)$ for $d\mid N$.
 \begin{enumerate}
-\item For $\gamma=\smat abcd\in\SL_2(\Z)$ with $Q=N/\gcd(c,N)$ there are integers
+\item For $\gamma=\smat ab{c}{\delta}\in\SL_2(\Z)$ with $Q=N/\gcd(c,N)$ there are integers
 $A,B,D'$ with $AD'=d$, $D'=\gcd(d,Q)$, such that
 $(\Delta_d|_{12}\gamma)(\tau)=D'^{-12}\,\Delta\bigl((A\tau+B)/D'\bigr)$.
 \item $D_N|_{12\sz(N)}\gamma=Q^{-6\sz(N)}\cdot u\cdot q^{r}\,(1+\cdots)$ with $u$
@@ -166,9 +175,9 @@ a root of unity, $r\in\frac1Q\Z_{>0}$ and $1+\cdots\in\Z[\zeta_Q][[q^{1/Q}]]$.
 $A,D'>0$ (Hermite normal form); then $A$ is the gcd of the first column
 $(da,c)$, so $A=\gcd(d,c)=\gcd(d,N/Q)$ and $D'=d/A=\gcd(d,Q)$, using that $d\mid N$
 and $N$ is squarefree.  With $z=(A\tau+B)/D'$ we have $d\gamma\tau=\gamma'z$ and
-$c\tau+d=D'\cdot j(\gamma',z)$, where $j(\gamma',z)$ is the automorphy factor,
+$c\tau+\delta=D'\cdot j(\gamma',z)$, where $j(\gamma',z)$ is the automorphy factor,
 because the bottom row of $\smat d001$ is $(0,1)$.  Hence
-$(c\tau+d)^{-12}\Delta(d\gamma\tau)=D'^{-12}j(\gamma',z)^{-12}\Delta(\gamma'z)=D'^{-12}\Delta(z)$.
+$(c\tau+\delta)^{-12}\Delta(d\gamma\tau)=D'^{-12}j(\gamma',z)^{-12}\Delta(\gamma'z)=D'^{-12}\Delta(z)$.
 
 (2) The number of $d\mid N$ with $\gcd(d,Q)=e$ is $\sz(N/Q)$ for each $e\mid Q$,
 and $\prod_{e\mid Q}e=Q^{\sz(Q)/2}$, so
@@ -266,8 +275,11 @@ Let $\theta=q\,\frac{d}{dq}=\frac1{2\pi i}\frac{d}{d\tau}$ and let
 $\vartheta_kf=\theta f-\frac k{12}E_2f$ be the Serre derivative, which maps
 $M_k(\Gamma)$ to $M_{k+2}(\Gamma)$ for every finite index subgroup
 $\Gamma\subset\SL_2(\Z)$ and satisfies
-$\vartheta_k(f|_k\gamma)=(\vartheta_kf)|_{k+2}\gamma$ for $\gamma\in\SL_2(\Z)$
-\cite[\S5.1]{Zagier}.
+$\vartheta_k(f|_k\gamma)=(\vartheta_kf)|_{k+2}\gamma$ for $\gamma\in\SL_2(\Z)$.
+(In \cite[\S5.1]{Zagier} this is stated for $\SL_2(\Z)$; the equivariance, and
+with it the statement for subgroups, follows from the same computation, since
+$\theta(f|_k\gamma)-(\theta f)|_{k+2}\gamma=\frac{k}{12}\bigl(E_2-E_2|_2\gamma\bigr)f|_k\gamma$
+by the transformation law of $E_2$.)
 
 \begin{lemma}\label{lem:serre}
 If $H\in M_k(\Gamma_0(N))$ is cusp-integral then so is $12\,\vartheta_kH$.
@@ -316,12 +328,12 @@ the stated absolute value, where $G=H^a/D_N^{\,e}\in\Q(X_0(N))$.
 It remains to show $G(\tau_0)\in\Q(x)$.  Let $w=\smat{*}{*}{c}{d}$ be an
 Atkin--Lehner matrix of determinant $Q$, so that
 $F(w\tau)=\rho(\tau)F(\tau)$ with $\rho(\tau)=(c\tau+d)^2/Q$ and
-$w'(\tau)=\rho(\tau)^{-1}$.  Differentiating $e-1$ times at $\tau_0$ and using the
-vanishing of the lower derivatives of $F$ at $\tau_0$ gives
+$w'(\tau)=\rho(\tau)^{-1}$.  The stabilizer of $w\tau_0$ is conjugate to that of
+$\tau_0$, so $F$ vanishes to order at least $e-1$ at both points.
+Differentiating $e-1$ times at $\tau_0$ and using this vanishing gives
 $F^{(e-1)}(w\tau_0)=\rho(\tau_0)^{e}F^{(e-1)}(\tau_0)$.  By
 Lemma~\ref{lem:delta}(3), $D_N(w\tau_0)=\rho(\tau_0)^{6\sz(N)}D_N(\tau_0)$.
-Since $F$ also vanishes to order at least $e-1$ at $w\tau_0$, the same identity
-$H=12^{e-1}\theta^{e-1}F$ holds there, and therefore $G(w\tau_0)=G(\tau_0)$.
+The identity $H=12^{e-1}\theta^{e-1}F$ holds at $w\tau_0$ as well, and therefore $G(w\tau_0)=G(\tau_0)$.
 Now let $y\in X_0(N)$ be the image of $\tau_0$.  An element of
 $\mathrm{Gal}(\Qbar/\Q(x))$ maps $y$ to a point of the fibre over $x$, that is, to
 the image of some $w\tau_0$, so it fixes $G(y)$.
@@ -351,9 +363,12 @@ holds if $\nu_F(\tau_1)\cdot M^{h-1}<1$, where $M\ge1$ bounds $\nu_F$ on a finit
 Galois-stable set of CM points containing $x$.
 \end{corollary}
 \begin{proof}
-The order $e$ is the same for all $x_j$, since it is determined by ramification
-indices of the maps $X_0(N)\to\Xs$ and $X_0(N)\to X(1)$, which are defined over
-$\Q$.  The function $G$ in the proof of Theorem~\ref{thm:elliptic} lies in
+The order $e$ is the same for all $x_j$.  Indeed, if $y_j\in X_0(N)$ lies above
+$x_j$, then $e$ is the ramification index of $\HH\to X(1)$ at $\tau_j$, divided
+by that of $X_0(N)\to X(1)$ at $y_j$, times that of $X_0(N)\to\Xs$ at $y_j$.  The
+last two are invariant under $\mathrm{Gal}(\Qbar/\Q)$ because the maps are defined
+over $\Q$; the first is $3$, $2$ or $1$ according as $j(y_j)$ is $0$, $1728$ or
+neither, and these values are rational.  The function $G$ in the proof of Theorem~\ref{thm:elliptic} lies in
 $\Q(X_0(N))$ and, by that proof, is constant on the fibre of $X_0(N)\to\Xs$ over
 each $x_j$; so the numbers
 $n_F(\tau_j)$ are the conjugates of the algebraic integer $n_F(\tau_1)$, and their
@@ -434,7 +449,7 @@ W^{\circ}=\bigl((e-1)!\bigr)^3\sum_{\substack{i+j=3e-2\\ e-1\le i,j\le 2e-1}}
 \]
 Then the point of the model corresponding to $x_0$ is
 \[
-[\,f_{e-1}:W^{\circ}/h_{e-1}^{3}:h_{e-1}\,]\ \text{ if } h_{e-1}\ne0,
+[\,f_{e-1}:W^{\circ}:h_{e-1}\,]\ \text{ if } h_{e-1}\ne0,
 \qquad
 [\,1:W^{\circ}/f_{e-1}^{3}:0\,]\ \text{ if } h_{e-1}=0 .
 \]
@@ -496,7 +511,7 @@ $p\nmid d$, then $\smat d001w_p\smat{dp}001^{-1}=\smat{x}{dy}{Nz/(dp)}{pt}$ lies
 in $\Gamma_0(M)$, so $u_d|w_p=u_{dp}$, and $u_{dp}|w_p=u_d$ because $w_p^2$ acts trivially.  Hence the
 $W(N)$-invariants in the span of the $u_d$ are zero unless all
 $\varepsilon_p(\phi)=1$, in which case they are spanned by $\sum_du_d=h_\phi$.
-Distinctness of the eigenvalue systems is strong multiplicity one \cite{AL}.
+Distinctness of the eigenvalue systems is strong multiplicity one \cite[Thm.~4]{AL}.
 
 For the bound, $\lvert a_\ell(\phi)\rvert\le2\sqrt\ell$ for $\ell\nmid M$ by
 Eichler--Shimura and Weil \cite[Ch.~7]{Shimura} (a case of \cite{Deligne}), and
@@ -561,9 +576,12 @@ rational CM points ranged from $2.6$ to $296$, the constants $C_{f_i}$ of
 Proposition~\ref{prop:tail} from $12$ to $306$, and between $20$ and $410$ terms
 of the $q$-expansion sufficed for the tail bound, in the normalization of $\nu$, to fall below $1/4$.
 
-\begin{thebibliography}{9}
+\begin{thebibliography}{99}
 \bibitem{AL} A.~O.~L. Atkin and J.~Lehner, \emph{Hecke operators on $\Gamma_0(m)$},
 Math. Ann. \textbf{185} (1970), 134--160.
+\bibitem{BruinierOno} J.~H. Bruinier and K.~Ono, \emph{Algebraic formulas for the
+coefficients of half-integral weight harmonic weak Maass forms}, Adv. Math.
+\textbf{246} (2013), 198--219; arXiv:1104.1182.
 \bibitem{Cox} D.~A. Cox, \emph{Primes of the form $x^2+ny^2$}, 2nd ed., Wiley, 2013.
 \bibitem{Deligne} P.~Deligne, \emph{La conjecture de Weil.~I}, Publ. Math. IH\'ES
 \textbf{43} (1974), 273--307.
@@ -571,10 +589,10 @@ Math. Ann. \textbf{185} (1970), 134--160.
 Graduate Texts in Math. 228, Springer, 2005.
 \bibitem{GrossZagier} B.~H. Gross and D.~B. Zagier, \emph{On singular moduli},
 J. reine angew. Math. \textbf{355} (1985), 191--220.
+\bibitem{KubertLang} D.~S. Kubert and S.~Lang, \emph{Modular units}, Grundlehren
+der math. Wissenschaften 244, Springer, 1981.
 \bibitem{Lang} S.~Lang, \emph{Elliptic functions}, 2nd ed., Graduate Texts in
 Math. 112, Springer, 1987.
-\bibitem{Schertz} R.~Schertz, \emph{Complex multiplication}, New Mathematical
-Monographs 15, Cambridge Univ. Press, 2010.
 \bibitem{Shimura} G.~Shimura, \emph{Introduction to the arithmetic theory of
 automorphic functions}, Princeton Univ. Press, 1971.
 \bibitem{SilvermanAT} J.~H. Silverman, \emph{Advanced topics in the arithmetic of
