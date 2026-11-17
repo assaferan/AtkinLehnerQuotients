@@ -133,7 +133,9 @@ end function;
 // rats: rational points from Points(C : Bound := B).
 // rat_cm_discs: Keys of RationalCMDiscs(N).
 // Returns (exceptional_idxs, involution_pairs, all_matched, fail_reason,
-// idx_to_disc).
+// idx_to_disc, labels_proved). labels_proved is true when every CM label and
+// the cusp label were proved in exact arithmetic (src/cm_certify.m, genus 2
+// only), so that the exceptional points are proved to be neither.
 //
 // Deliberately kept separate from LabelAndAnalyze despite the parallel shape:
 // CM matching here is affine (x,y) plus a WPS-infinity chart for a degree-2
@@ -142,7 +144,7 @@ end function;
 // algorithms for different model geometries; the shared part is already
 // factored out into EllipticDiscsByOrder.
 function LabelAndAnalyze_hyperelliptic(N, C, fs, rats, rat_cm_discs :
-    cc_prec := 200, debug := false)
+    cc_prec := 200, debug := false, prove := true)
     CC  := ComplexField(cc_prec);
     tol := 10^-10;  // affine coordinate tolerance (looser than projective)
     g   := Genus(C);
@@ -290,7 +292,7 @@ function LabelAndAnalyze_hyperelliptic(N, C, fs, rats, rat_cm_discs :
 
     if nfail ne 0 then
         printf "WARNING: CM matching failed for N=%o: %o\n", N, fail_reason;
-        return [], [* *], false, fail_reason, AssociativeArray();
+        return [], [* *], false, fail_reason, AssociativeArray(), false;
     end if;
 
     // The cusp (q -> 0) is a WPS-infinity point: with the echelon basis
@@ -325,11 +327,54 @@ function LabelAndAnalyze_hyperelliptic(N, C, fs, rats, rat_cm_discs :
     for disc in Keys(disc_to_idx) do idx_to_disc_full[disc_to_idx[disc]] := disc; end for;
     if j_cusp gt 0 then idx_to_disc_full[j_cusp] := 0; end if;
 
+    // Each rational CM point is one orbit of one rational discriminant, so
+    // once every orbit is proved to be a different labelled point, and the
+    // cusp is matched exactly, the unlabelled points are neither.
+    labels_proved := false;
+    if prove and g eq 2 then
+        Cs := DeligneConstants(fs, N);
+        cm_idxs := Sort([j : j in matched | j ne j_cusp]);
+        proved_idxs := {Integers()|};
+        unproved := [* *];
+        for disc in Sort(Setseq(Keys(disc_to_idx))) do
+            e := EllipticOrderOfDisc(disc, ell_pts);
+            forms := CMOrbitForms(disc, N);
+            for oid in [1..#forms] do
+                hit := 0;
+                for j in [disc_to_idx[disc]] cat cm_idxs do
+                    if j in proved_idxs then continue; end if;
+                    if CertifyHyperellipticCMPoint(N, fs, Cs, Eltseq(rats[j]), forms[oid], e) then
+                        hit := j; break;
+                    end if;
+                end for;
+                if hit eq 0 then
+                    Append(~unproved, <disc, oid>);
+                else
+                    Include(~proved_idxs, hit);
+                end if;
+            end for;
+        end for;
+        cusp_ok := false;
+        if j_cusp gt 0 then
+            seq := Eltseq(rats[j_cusp]);
+            cusp_ok := seq[2]/seq[1]^3 eq
+                -Coefficient(fs[2], 2)/Coefficient(fs[1], 1)^2;
+        end if;
+        labels_proved := #unproved eq 0 and proved_idxs eq Seqset(cm_idxs) and cusp_ok;
+        if labels_proved then
+            printf "Proved: all %o CM labels and the cusp label; the %o exceptional point(s) are neither cusp nor CM\n",
+                #cm_idxs, #rats - #matched;
+        else
+            printf "WARNING: N=%o: labels not proved for <disc, orbit> %o (cusp exact: %o); these labels are numerical only\n",
+                N, unproved, cusp_ok;
+        end if;
+    end if;
+
     // Remaining unmatched points are exceptional.
     exceptional_idxs := [j : j in [1..#rats] | j notin matched];
     printf "Labelled %o CM+cusp, %o exceptional\n", #matched, #exceptional_idxs;
     for j in exceptional_idxs do printf "  exceptional: rats[%o] = %o\n", j, rats[j]; end for;
-    if #exceptional_idxs eq 0 then return exceptional_idxs, [* *], true, "", idx_to_disc_full; end if;
+    if #exceptional_idxs eq 0 then return exceptional_idxs, [* *], true, "", idx_to_disc_full, labels_proved; end if;
 
     // Build idx -> disc map for the involution search.
     idx_to_disc := AssociativeArray();
@@ -352,7 +397,7 @@ function LabelAndAnalyze_hyperelliptic(N, C, fs, rats, rat_cm_discs :
     end for;
     printf "All exceptional points explained: %o\n", all_matched;
 
-    return exceptional_idxs, involution_pairs, all_matched, "", idx_to_disc_full;
+    return exceptional_idxs, involution_pairs, all_matched, "", idx_to_disc_full, labels_proved;
 end function;
 
 // Projective residual between nonzero complex vectors.

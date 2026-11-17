@@ -72,7 +72,7 @@ casually: `--slow` is ~43 min, dominated by `test_311_jmap`.
   discs; `labeling.m` labels points and fits planes through CM triples;
   `point_search.m` the driver entry points; `star_degree.m` (c_n, delta_f, E^C_f);
   `classify_covers.m` (`ClassifyTripleCovers`); `cm_certify.m` exact-arithmetic
-  proofs that a rational point is a given CM point (canonical models only; the
+  proofs that a rational point is a given CM point (canonical and genus 2 models; the
   mathematics is in `notes/cm_integrality.tex`); out-of-chain `triple_covers.m` and
   `hnf_canonical.m`.
 - `scripts/` — `gen_genus_models.m` (regenerates `data/genus<g>_models.m`),

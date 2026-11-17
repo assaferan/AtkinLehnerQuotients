@@ -1,7 +1,7 @@
 // src/cm_certify.m
 //
 // Proofs, in exact rational arithmetic, about the images of CM points on the
-// canonical model of X_0(N)*. The mathematics is in notes/cm_integrality.tex:
+// canonical model of X_0(N)*, or on its genus 2 model y^2 = P(x). The mathematics is in notes/cm_integrality.tex:
 // for an integral star form F and a CM point tau the number
 //     nu_F(tau)^sigma_0(N)
 // is the root of a rational integer when the point is rational, so an upper
@@ -11,12 +11,14 @@
 // Entry points:  CertifyRationalCMPoint(N, fs, Cs, P, form, e)
 //                CertifyVanishingAtCM(N, fs, Cs, mvec, forms, e)
 //                CertifyPolynomialsVanishAtCM(N, fs, Cs, polys, forms, h, e)
+//                CertifyHyperellipticCMPoint(N, fs, Cs, pt, form, e)
 //                CMHeightBounds(N, fs, Cs, form, e)
 //                DeligneConstants(fs, N)
 //
 // Depends on cm_points.m only. Not loadable standalone. The drivers that
 // apply these to a list of rational points are in labeling.m
-// (ProveRationalCMLabels, CertifyRationalCMPoints).
+// (ProveRationalCMLabels, CertifyRationalCMPoints, and the proof step of
+// LabelAndAnalyze_hyperelliptic).
 //
 // Real numbers are enclosed in balls <mid, rad> with rational entries, and
 // complex numbers in discs <x, y, rad>. Floating point is used only to choose
@@ -435,4 +437,56 @@ function CertifyPolynomialsVanishAtCM(N, fs, Cs, polys, forms, h, e : Prec := 12
         if exists{x : x in pows | x*M^(h - 1) ge 1} then return false; end if;
     end for;
     return true;
+end function;
+
+// Proves that the rational point pt = [X, Y, Z] of the genus 2 model
+// y^2 = P(x) in the weighted plane (1, 3, 1) is the image of the rational CM
+// point given by `form`, of elliptic order e. Here fs = [f, h], x = f/h and
+// y = W/h^3 with W = h*theta(f) - f*theta(h), theta = q d/dq.
+//
+// Three checks. Z*f - X*h vanishes at the point (integrality certificate), so
+// x is right. The chart form (h if Z ne 0, else f) is provably nonzero there.
+// Then y is +-Y because the model is a proved identity, and the wrong sign is
+// excluded by an enclosure: Z^3*W + Y*h^3 (or X^3*W + Y*f^3 at infinity) is
+// provably nonzero.
+//
+// At an elliptic point every value is replaced by its leading Taylor
+// coefficient at tau. With F_k = theta^k F(tau), that is F_(e-1) for f and h,
+// and for W it is ((e-1)!)^3 * sum (j - i)/(i! j!) h_i f_j over i + j = 3e - 2
+// with e - 1 <= i, j <= 2e - 1, on the scale where h^3 has h_(e-1)^3.
+function CertifyHyperellipticCMPoint(N, fs, Cs, pt, form, e : Prec := 128)
+    error if #fs ne 2, "CertifyHyperellipticCMPoint: genus 2 only";
+    X := Rationals()!pt[1]; Y := Rationals()!pt[2]; Z := Rationals()!pt[3];
+    lam := LCM(Denominator(X), Denominator(Z));
+    lam := lam/GCD(Integers()!(lam*X), Integers()!(lam*Z));
+    X := Integers()!(lam*X); Z := Integers()!(lam*Z); Y := lam^3*Y;
+
+    // v[k][i] encloses 12^k theta^k fs[i] (tau), for k = e-1, ..., 2e-1
+    v := AssociativeArray();
+    L := 0;
+    for k in [e - 1..2*e - 1] do
+        ok, vals, L0 := CMValueDiscs(N, fs, Cs, form, k + 1, Prec);
+        if not ok then return false; end if;
+        v[k] := vals; L := L0;
+    end for;
+    lead := v[e - 1];
+
+    lin := CBAdd(CBScale(Z, lead[1]), CBScale(-X, lead[2]));
+    if NuPowerUpper(N, form, e, CBAbsUpper(lin, Prec), L) ge 1 then return false; end if;
+    chart := Z ne 0 select 2 else 1;
+    if CBAbsLower(lead[chart], Prec) le 0 then return false; end if;
+    if Y eq 0 then return true; end if;
+
+    // 12^(3e-2) times the leading coefficient of W
+    w := <0/1, 0/1, 0/1>;
+    for i in [e - 1..2*e - 1] do
+        j := 3*e - 2 - i;
+        if j eq i then continue; end if;
+        c := Factorial(e - 1)^3*(j - i)/(Factorial(i)*Factorial(j));
+        w := CBAdd(w, CBScale(c, CBMul(v[i][2], v[j][1], Prec)));
+    end for;
+    cube := CBMul(lead[chart], CBMul(lead[chart], lead[chart], Prec), Prec);
+    s := Z ne 0 select Z else X;
+    wrong := CBAdd(CBScale(s^3, w), CBScale(12*Y, cube));
+    return CBAbsLower(wrong, Prec) gt 0;
 end function;

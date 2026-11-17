@@ -142,4 +142,38 @@ for N in [137, 311] do
     end for;
 end for;
 
+printf "\n=== Genus 2 levels: CM labels are proved (N=67, 93, 106) ===\n";
+// Between them these levels have elliptic orders 1, 2, 3, 4, 6 and a CM point
+// at infinity.
+orders_seen := {Integers()|};
+for N in [67, 93, 106] do
+    X, fs := XZeroNstarWithForms_hyperelliptic(N, 3000);
+    rats := PointsOriginalModel(X, 10000);
+    _, _, _, why, idx_to_disc, labels_proved :=
+        LabelAndAnalyze_hyperelliptic(N, X, fs, rats, Keys(RationalCMDiscs(N)));
+    AssertEqual(~results, why, "", Sprintf("N=%o: numerical labeling succeeds", N));
+    AssertEqual(~results, labels_proved, true, Sprintf("N=%o: all CM labels and the cusp proved", N));
+    ell_pts := EllipticDiscsByOrder(N);
+    Cs := DeligneConstants(fs, N);
+    cm_idxs := [j : j in Sort(Setseq(Keys(idx_to_disc))) | idx_to_disc[j] ne 0];
+    for t in [1..#cm_idxs] do
+        j := cm_idxs[t]; d := idx_to_disc[j];
+        e := EllipticOrderOfDisc(d, ell_pts); Include(~orders_seen, e);
+        form := CMOrbitForms(d, N)[1];
+        // Negative controls: the image under the hyperelliptic involution,
+        // and the next labelled point, are not certified for this CM point.
+        pt := Eltseq(rats[j]);
+        if pt[2] ne 0 then
+            AssertEqual(~results, CertifyHyperellipticCMPoint(N, fs, Cs, [pt[1], -pt[2], pt[3]], form, e), false,
+                Sprintf("N=%o D=%o: the involution image of %o is not certified", N, d, rats[j]));
+        end if;
+        other := cm_idxs[t mod #cm_idxs + 1];
+        AssertEqual(~results, CertifyHyperellipticCMPoint(N, fs, Cs, Eltseq(rats[other]), form, e), false,
+            Sprintf("N=%o D=%o: the point %o of D=%o is not certified", N, d, rats[other], idx_to_disc[other]));
+    end for;
+    AssertEqual(~results, exists{j : j in cm_idxs | rats[j][3] eq 0}, true,
+        Sprintf("N=%o: a CM point at infinity is among the proved labels", N));
+end for;
+AssertEqual(~results, orders_seen, {1, 2, 3, 4, 6}, "genus 2: every elliptic order is exercised");
+
 Report(~results, "test_cm_certify");
