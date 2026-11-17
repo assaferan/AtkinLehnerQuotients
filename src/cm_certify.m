@@ -14,6 +14,7 @@
 //                CertifyHyperellipticCMPoint(N, fs, Cs, pt, form, e)
 //                CMHeightBounds(N, fs, Cs, form, e)
 //                DeligneConstants(fs, N)
+//                CMStabilizerOrder(form, N)
 //
 // Depends on cm_points.m only. Not loadable standalone. The drivers that
 // apply these to a list of rational points are in labeling.m
@@ -24,9 +25,10 @@
 // complex numbers in discs <x, y, rad>. Floating point is used only to choose
 // how many series terms to sum, never in a bound.
 //
-// The elliptic order e is an input (callers take it from EllipticDiscsByOrder). An e that
-// is too small is caught (every form then vanishes and the nonvanishing check
-// fails); an e that is too large is not detected here.
+// The elliptic order e is an input (callers take it from
+// EllipticDiscsByOrder), and every certificate first checks it against the
+// exact stabilizer order of the point (CMStabilizerOrder), returning "not
+// proved" on a mismatch.
 
 // ---------------------------------------------------------------------------
 // Rational ball arithmetic
@@ -221,6 +223,36 @@ function EllipticOrderOfDisc(D, ell_pts)
     return 1;
 end function;
 
+// Order of the stabilizer of the root of `form` in Gamma_0(N)* modulo
+// scalars, N squarefree. The integer matrices fixing the root of the
+// primitive form [A, B, C] are
+//     [ (t - B*u)/2, -C*u ; A*u, (t + B*u)/2 ],  of determinant (t^2 - D*u^2)/4,
+// and such a matrix is an Atkin-Lehner matrix for Q | N exactly when its
+// determinant is Q, N divides A*u and Q divides both diagonal entries. Since
+// D < 0 that leaves finitely many (t, u), counted here up to sign.
+function CMStabilizerOrder(form, N)
+    error if not IsSquarefree(N), "CMStabilizerOrder: level must be squarefree";
+    c := GCD(form);
+    A := form[1] div c; B := form[2] div c; C := form[3] div c;
+    D := B^2 - 4*A*C;
+    e := 1;
+    for Q in Divisors(N) do
+        u := 1;
+        while -D*u^2 le 4*Q do
+            ok, t := IsSquare(4*Q + D*u^2);
+            if ok and (A*u) mod N eq 0 then
+                for tt in {t, -t} do
+                    if (tt - B*u) mod (2*Q) eq 0 and (tt + B*u) mod (2*Q) eq 0 then
+                        e +:= 1;
+                    end if;
+                end for;
+            end if;
+            u +:= 1;
+        end while;
+    end for;
+    return e;
+end function;
+
 // Rational lower bound for prod_{d | N} ||eta||(d*tau)^4, with
 // ||eta||(z) = |eta(z)| Im(z)^(1/4), which is SL_2(Z)-invariant. So each
 // factor is evaluated at the root z of the reduced form equivalent to that of
@@ -332,6 +364,7 @@ end function;
 // of elliptic order e. True means proved; false means not proved, which is
 // not a proof of the opposite.
 function CertifyVanishingAtCM(N, fs, Cs, mvec, forms, e : Prec := 128)
+    if exists{f : f in forms | CMStabilizerOrder(f, N) ne e} then return false; end if;
     prod := 1/1;
     for form in forms do
         ok, sums, tail, L := CMEvaluationData(N, fs, form, e, Prec);
@@ -345,6 +378,7 @@ end function;
 // (a_1 : ... : a_g) of a rational CM point. Returns ok = false if the series
 // is too short.
 function CMHeightBounds(N, fs, Cs, form, e : Prec := 128)
+    if CMStabilizerOrder(form, N) ne e then return false, []; end if;
     ok, sums, tail, L := CMEvaluationData(N, fs, form, e, Prec);
     if not ok then return false, []; end if;
     s0 := NumberOfDivisors(N);
@@ -365,6 +399,7 @@ end function;
 // that some coordinate form is provably nonzero there, which rules out an
 // elliptic order e that is too small.
 function CertifyRationalCMPoint(N, fs, Cs, P, form, e : Prec := 128)
+    if CMStabilizerOrder(form, N) ne e then return false; end if;
     g := #fs;
     den := LCM([Denominator(c) : c in P]);
     a := [Integers() | den*c : c in P];
@@ -421,6 +456,7 @@ end function;
 // a point's bound times the (h-1)-th power of the largest bound in the set
 // bounds the norm, so a product below 1 forces the value to vanish.
 function CertifyPolynomialsVanishAtCM(N, fs, Cs, polys, forms, h, e : Prec := 128)
+    if exists{f : f in forms | CMStabilizerOrder(f, N) ne e} then return false; end if;
     data := [* *];
     for form in forms do
         ok, vals, L := CMValueDiscs(N, fs, Cs, form, e, Prec);
@@ -456,6 +492,7 @@ end function;
 // with e - 1 <= i, j <= 2e - 1, on the scale where h^3 has h_(e-1)^3.
 function CertifyHyperellipticCMPoint(N, fs, Cs, pt, form, e : Prec := 128)
     error if #fs ne 2, "CertifyHyperellipticCMPoint: genus 2 only";
+    if CMStabilizerOrder(form, N) ne e then return false; end if;
     X := Rationals()!pt[1]; Y := Rationals()!pt[2]; Z := Rationals()!pt[3];
     lam := LCM(Denominator(X), Denominator(Z));
     lam := lam/GCD(Integers()!(lam*X), Integers()!(lam*Z));

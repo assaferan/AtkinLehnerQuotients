@@ -176,4 +176,30 @@ for N in [67, 93, 106] do
 end for;
 AssertEqual(~results, orders_seen, {1, 2, 3, 4, 6}, "genus 2: every elliptic order is exercised");
 
+printf "\n=== Exact stabilizer orders ===\n";
+// tau = i and tau = (1 + sqrt(-3))/2 at level 1 have orders 2 and 3. At level
+// N the root of [N, 0, 1] is fixed by the Fricke involution.
+AssertEqual(~results, CMStabilizerOrder([1, 0, 1], 1), 2, "level 1: i has order 2");
+AssertEqual(~results, CMStabilizerOrder([1, -1, 1], 1), 3, "level 1: rho has order 3");
+AssertEqual(~results, CMStabilizerOrder([1, 0, 5], 1), 1, "level 1: sqrt(-5) has order 1");
+AssertEqual(~results, CMStabilizerOrder([137, 0, 1], 137) ge 2, true, "N=137: the Fricke fixed point is elliptic");
+// The table used by the labeling agrees at every CM point it lists.
+for N in [67, 93, 106, 137, 154, 178, 311, 330] do
+    ell_pts := EllipticDiscsByOrder(N);
+    discs := Keys(RationalCMDiscs(N)) join &join[Keys(ell_pts[l]) : l in [2, 3, 4, 6]];
+    bad := [<d, fm> : fm in CMOrbitForms(d, N), d in discs |
+        CMStabilizerOrder(fm, N) ne EllipticOrderOfDisc(d, ell_pts)];
+    AssertEqual(~results, bad, [], Sprintf("N=%o: stabilizer orders match the elliptic table (%o discs)", N, #discs));
+end for;
+// A certificate called with the wrong order refuses.
+N := 137;
+X, fs := StarModelWithForms(N, 3000);
+Cs := DeligneConstants(fs, N);
+form := CMOrbitForms(-19, N)[1];
+e0 := CMStabilizerOrder(form, N);
+ok := CMHeightBounds(N, fs, Cs, form, e0);
+AssertEqual(~results, ok, true, "N=137 D=-19: height bounds with the true order");
+ok := CMHeightBounds(N, fs, Cs, form, e0 + 1);
+AssertEqual(~results, ok, false, "N=137 D=-19: a wrong order is refused");
+
 Report(~results, "test_cm_certify");
