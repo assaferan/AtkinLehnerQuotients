@@ -140,9 +140,15 @@ the two against each other.
   singularity precheck is a Groebner computation that dominates at genus 8 and hangs
   at omega = 4 levels. Valid since canonical models of non-hyperelliptic curves are
   smooth. Hyperelliptic levels take `PointsOriginalModel` instead.
-- **"Confirmed"/"certified" in `labeling.m`** means numerically checked at two
-  precisions and two q-expansion lengths against a noise-scaled tolerance — strong
-  evidence, not proof. Real proof is the Sturm-bound path
+- **"Confirmed" vs. "proved" in `labeling.m` and `triple_covers.m`.** "Confirmed"
+  (and "certified" for a match) means numerically checked at two precisions and
+  two q-expansion lengths against a noise-scaled tolerance: strong evidence, not
+  proof. "Proved" means an exact-arithmetic certificate from `cm_certify.m`
+  succeeded; its output lines start with `Proved:` or say `(proved)`, and the
+  proved results are returned separately (`proved_component_matches`,
+  `all_cm_proved`, `labels_proved`, `proved_discs`). The numerical step finds the
+  candidate, the certificate proves it; a certificate that fails means "not
+  proved", never "false". Model identities are proved by the Sturm-bound path
   (`CertifyModularIdentity`), which errors rather than under-certify.
 
 ## Conventions

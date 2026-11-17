@@ -149,7 +149,15 @@ end function;
 // Atomically write `body` to `path` via a tmp-file + mv, then printf `msg`.
 // Shared by every Save*Map procedure in this file so a fix to the write path
 // (e.g. checking mv's exit status) only has to be made once.
+//
+// A file that already holds the same data is left alone: the cache directory
+// is tracked by git, and Magma's line wrapping of long output depends on the
+// version, so an unconditional rewrite would show up as a spurious change.
 procedure WriteCacheFileAtomic(path, body, msg)
+    ok, old := ReadCacheFile(path);
+    if ok and &cat Split(old, " \n\t\r") eq &cat Split(body, " \n\t\r") then
+        return;
+    end if;
     tmp := path cat ".tmp" cat Sprint(Random(10^9));
     Write(tmp, body : Overwrite := true);
     System(Sprintf("mv %o %o", tmp, path));
