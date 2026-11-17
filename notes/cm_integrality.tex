@@ -9,6 +9,7 @@
 \newtheorem{corollary}[theorem]{Corollary}
 \theoremstyle{definition}
 \newtheorem{definition}[theorem]{Definition}
+\newtheorem{example}[theorem]{Example}
 \theoremstyle{remark}
 \newtheorem{remark}[theorem]{Remark}
 
@@ -100,7 +101,8 @@ Section~\ref{sec:int} proves a more general statement
 (Theorem~\ref{thm:integral}); Section~\ref{sec:cons} gives the versions at
 elliptic points and for points of higher degree; Section~\ref{sec:tail} gives an
 explicit bound for Fourier coefficients, which is what a rigorous evaluation of
-$F(\tau)$ needs; Section~\ref{sec:num} records numerical checks.
+$F(\tau)$ needs; Section~\ref{sec:ex} works three examples at level $67$ by
+hand; Section~\ref{sec:num} records numerical checks.
 
 The proof is the standard argument that a modular function which is holomorphic
 on $\HH$ and has integral expansions at all cusps is integral over $\Z[j]$,
@@ -552,6 +554,193 @@ $\sz(n)\le2\sqrt n$ and $\sum_{n>m}nr^n=r^{m+1}(m+1-mr)/(1-r)^2$.
 
 All quantities in Proposition~\ref{prop:tail} are computed in exact rational
 arithmetic from the $q$-expansions of a basis of $S$.
+
+\section{Worked examples at level \texorpdfstring{$67$}{67}}\label{sec:ex}
+
+The smallest squarefree level for which $\Xs$ has genus at least $2$ is $N=67$,
+where $g=2$ and $\sz(N)=2$.  Three statements are proved here with every number
+displayed: a rational CM point, an elliptic point, and a conjugate pair of
+quadratic CM points.  The only inputs are the first $80$ Fourier coefficients of
+two forms; the arithmetic is that of a pocket calculator, although nobody would
+want to sum the series without a machine.  Decimals are rounded in the safe
+direction.
+
+\subsection*{Setup}
+The space $S$ has the basis
+\begin{align*}
+f&=q-3q^3-3q^4-3q^5+q^6+4q^7+3q^8+5q^9-3q^{11}+\cdots,\\
+h&=q^2-q^3-3q^4+3q^7+4q^8+3q^9-3q^{10}-2q^{11}+\cdots,
+\end{align*}
+and with $x=f/h$, $y=(h\,\theta f-f\,\theta h)/h^3$ the model is
+\[
+y^2=P(x)=x^6-4x^5+6x^4-6x^3+9x^2-14x+9 .
+\]
+
+\emph{Coefficient bounds.}  From $a_n(T_2F)=a_{2n}(F)+2a_{n/2}(F)$ and the
+coefficients above, $T_2f=-h$ and $T_2h=f-3h$.  The characteristic polynomial
+$X^2+3X+1$ is squarefree, so Proposition~\ref{prop:tail} applies with
+$\mathcal T=T_2$:
+\[
+\mathcal M=\begin{pmatrix}2&-3\\-3&7\end{pmatrix},\qquad
+\mathcal M^{-1}=\frac15\begin{pmatrix}7&3\\3&2\end{pmatrix},\qquad
+\kappa_{67}=1+\sqrt{67}\le9.186 .
+\]
+For $F=\alpha f+\beta h$ we have $u=(a_1(F),a_2(F))=(\alpha,\beta)$ and
+$C_F=\kappa_{67}\sqrt{2(7\alpha^2+6\alpha\beta+2\beta^2)/5}$, so
+\[
+C_f\le15.38,\qquad C_h\le8.22,\qquad C_{f-2h}\le10.07,\qquad C_{f+h}\le22.5 .
+\]
+For derivatives, $n^k\lvert a_n(F)\rvert\le2C_Fn^{k+1}$, and the terms
+$n^{k+1}r^n$, $n>m$, decrease at least geometrically with ratio
+$\rho_k=r\bigl(\tfrac{m+2}{m+1}\bigr)^{k+1}$, so for $\lvert q\rvert=r$ and $\rho_k<1$
+\begin{equation}\label{eq:tail-theta}
+\Bigl\lvert\theta^kF(\tau)-\sum_{n\le m}n^ka_n(F)q^n\Bigr\rvert
+\le\frac{2C_F\,(m+1)^{k+1}r^{m+1}}{1-\rho_k}.
+\end{equation}
+
+\emph{The factor $T$.}  Let $D<0$ be a discriminant of class number one and
+$\tau=(-B+\sqrt D)/134$ a root of a form $[67,B,C]$ of discriminant $D$.  The
+forms of $\tau$ and of $67\tau$, namely $[67,B,C]$ and $[1,B,67C]$, are both
+equivalent to the principal form, so
+$\etanorm{\tau}=\etanorm{67\tau}=\etanorm{z_D}$ with
+$\im z_D=\sqrt{\lvert D\rvert}/2$, and
+\[
+T(\tau)=\etanorm{z_D}^4=\tfrac12\sqrt{\lvert D\rvert}\;e^{-\pi\sqrt{\lvert D\rvert}/6}\,
+\Bigl\lvert\prod_{n\ge1}(1-q_z^n)\Bigr\rvert^4,
+\qquad\lvert q_z\rvert=e^{-\pi\sqrt{\lvert D\rvert}} .
+\]  Since
+$\sqrt{67}\,\im\tau=\sqrt{\lvert D\rvert}/(2\sqrt{67})$, Remark~\ref{rem:use}
+gives, for $\lvert D\rvert\ge43$,
+\begin{equation}\label{eq:scale67}
+\frac{\sqrt{67}\,\im\tau}{T(\tau)}\le(1+10^{-8})\,\frac{e^{\pi\sqrt{\lvert D\rvert}/6}}{\sqrt{67}} .
+\end{equation}
+
+\begin{example}[A rational CM point, $D=-43$]\label{ex:43}
+The class number of $D=-43$ is one and $15^2+43=4\cdot67$, so
+$\tau=(15+\sqrt{-43})/134$ is a Heegner point with rational image
+$x_0\in X_0(67)^*(\Q)$.  Its stabilizer is trivial: an integer matrix fixing $\tau$ is
+$\smat{(t+15u)/2}{-u}{67u}{(t-15u)/2}$, of determinant $(t^2+43u^2)/4$, and
+the only solutions of $t^2+43u^2=4Q$ with $Q\in\{1,67\}$, $u\ge1$ are
+$(t,u)=(\pm15,1)$ with $Q=67$, for which the diagonal entries are $0$ and
+$\pm15$, not both divisible by $67$.  We claim that $x_0$ is the point $(2:-1:1)$
+of the model.
+
+Here $q=r\,e^{2\pi i\cdot15/134}$ with $r=e^{-\pi\sqrt{43}/67}\le0.7354$, and by
+\eqref{eq:scale67} the factor in $\nu$ is at most $3.7853$.  Take $F=f-2h$.
+With $m=35$ terms the partial sum has absolute value at most $2.8\cdot10^{-4}$,
+and the tail bound of Proposition~\ref{prop:tail} is
+\[
+2\cdot10.07\cdot\frac{r^{36}(36-35r)}{(1-r)^2}\le0.047 .
+\]
+Hence $\nu_F(\tau)\le3.7853\cdot0.0473<0.18<1$, and Theorem~\ref{thm:main-intro}
+gives $f(\tau)=2h(\tau)$ exactly.  With $60$ terms,
+\[
+h(\tau)=1.58730-0.69391\,i,\qquad
+\theta f(\tau)=13.8795-8.3559\,i,\qquad
+\theta h(\tau)=7.9587-5.2794\,i,
+\]
+each with error at most $4\cdot10^{-3}$ by \eqref{eq:tail-theta}.  So
+$h(\tau)\ne0$ and $x(x_0)=2$.  Since $P(2)=1$ we get $y(x_0)=\pm1$, that is
+$W(\tau)=\pm h(\tau)^3$ for $W=h\,\theta f-f\,\theta h$.  Numerically
+$W(\tau)=-1.706+4.911\,i$ and $h(\tau)^3=1.706-4.911\,i$, with errors at most
+$0.05$, so $\lvert W(\tau)-h(\tau)^3\rvert\ge10$ and the sign is $-1$.
+
+The integers of Theorem~\ref{thm:main-intro} can be seen as well.  Summing more
+terms gives $\nu_h(\tau)=6.557438\ldots$, which agrees with $\sqrt{43}$ to all
+the digits computed, and $\nu_f=2\nu_h$; so
+\[
+n_h(\tau)=43^6,\qquad n_f(\tau)=2^{12}\cdot43^6 .
+\]
+Corollary~\ref{cor:height-intro} alone also proves $x(x_0)=2$: it gives
+$\varphi(x_0)=(a_1:a_2)$ with $\lvert a_1\rvert\le13$ and $\lvert a_2\rvert\le6$,
+where $a_2\ne0$ because $h(\tau)\ne0$; a fraction $a_1/a_2\ne2$ with
+$\lvert a_2\rvert\le6$ differs from $2$ by at least $1/6$, whereas
+$\lvert f(\tau)/h(\tau)-2\rvert\le0.0473/1.72<1/6$.
+\end{example}
+
+\begin{example}[An elliptic point, $D=-67$]\label{ex:67}
+Let $\tau_0=\tfrac12+\tfrac{i}{2\sqrt{67}}$, the root of $[67,-67,17]$, of
+discriminant $-67$ and class number one.  It is fixed by the Atkin--Lehner
+matrix $\smat{67}{-34}{134}{-67}$ of determinant $67$, and the stabilizer has
+order $e=2$ (the only solution of $t^2+67u^2=4Q$ with $Q\in\{1,67\}$, $u\ge1$
+is $(t,u)=(0,2)$, which gives this matrix).  So $f(\tau_0)=h(\tau_0)=0$, and the image $x_0$ is described by
+first derivatives.  We claim that $x_0=(-1:7:1)$.
+
+Now $q=-e^{-\pi/\sqrt{67}}$ is real, $r\le0.68127$, and all values below are
+real.  By \eqref{eq:scale67} and Theorem~\ref{thm:elliptic},
+\[
+\Bigl(\frac{\sqrt{67}\,\im\tau_0}{T(\tau_0)}\Bigr)^2\le78.807,
+\qquad
+\nu_F(\tau_0)\le78.807\cdot12\cdot\lvert\theta F(\tau_0)\rvert .
+\]
+Take $F=f+h$.  With $m=60$ terms the partial sum of $\theta F$ is at most
+$1.5\cdot10^{-7}$ in absolute value and the bound \eqref{eq:tail-theta} with
+$k=1$ is at most $3.9\cdot10^{-5}$, so $\nu_F(\tau_0)<0.04<1$ and
+$\theta f(\tau_0)=-\theta h(\tau_0)$.  With $80$ terms, writing
+$F_k=\theta^kF(\tau_0)$,
+\[
+f_1=1.7003788,\quad h_1=-1.7003788,\quad
+f_3=149.0693,\quad h_3=-88.3522,
+\]
+with errors at most $2\cdot10^{-4}$.  So $h_1\ne0$ and $x(x_0)=f_1/h_1=-1$ by
+\eqref{eq:phi-ell}.  For $e=2$ the sum in Proposition~\ref{prop:genus2} has the
+terms $(i,j)=(1,3),(2,2),(3,1)$, and
+\[
+W^\circ=\tfrac13\,(h_1f_3-h_3f_1)=-34.414,\qquad h_1^3=-4.9163,
+\qquad W^\circ/h_1^3=7.000 .
+\]
+Since $P(-1)=49$, the value $y(x_0)=W^\circ/h_1^3$ is $\pm7$, and
+$W^\circ+7h_1^3=-68.8\ne0$ rules out $-7$.
+
+Here $\nu_f(\tau_0)=78.806\cdot12\cdot1.7003788=1608.00$, which is $24\cdot67$
+to the digits computed; so the integer of Theorem~\ref{thm:elliptic} is
+$n_f(\tau_0)=(24\cdot67)^{12}$.
+\end{example}
+
+\begin{example}[A conjugate pair, $D=-115$]\label{ex:115}
+The class number of $D=-115$ is two, and $35^2+115=4\cdot67\cdot5$.  The CM
+points of discriminant $-115$ on $X_0(67)^*$ are the images $x_\pm$ of
+$\tau_\pm=(\pm35+\sqrt{-115})/134$, the roots of $[67,\mp35,5]$; they form a
+Galois-stable set.  We claim that $x(x_\pm)$ are the roots of $2x^2-3x+4$,
+that is $(3\pm\sqrt{-23})/4$.
+
+The form of $67\tau_\pm$ is $[1,\mp35,335]$, equivalent to the principal form
+$[1,1,29]$, and $[67,\mp35,5]$ is equivalent to the reduced form $[5,\pm5,7]$.
+With one exponential each, as in Remark~\ref{rem:use},
+\begin{align*}
+\etanorm{67\tau_\pm}^4&\ge\tfrac{\sqrt{115}}2\,e^{-\pi\sqrt{115}/6}(1-10^{-9})\ge0.019532,\\
+\etanorm{\tau_\pm}^4&\ge\tfrac{\sqrt{115}}{10}\,e^{-\pi\sqrt{115}/30}\Bigl(1-\tfrac{\rho}{1-\rho}\Bigr)^4\ge0.34719,
+\end{align*}
+where $\rho=e^{-\pi\sqrt{115}/5}\le0.0011851$.  Hence
+$T(\tau_\pm)\ge0.08234$, and with $\sqrt{67}\,\im\tau_\pm=\sqrt{115}/(2\sqrt{67})\le0.65506$,
+\[
+\Bigl(\frac{\sqrt{67}\,\im\tau_\pm}{T(\tau_\pm)}\Bigr)^2\le63.3 .
+\]
+Apply Proposition~\ref{prop:poly} to $G=2X_1^2-3X_1X_2+4X_2^2$, of degree
+$m=2$, with $e=1$: $\nu_G(\tau)\le63.3\,\lvert G(f(\tau),h(\tau))\rvert$.
+Here $r=e^{-\pi\sqrt{115}/67}\le0.60482$, and with $40$ terms the partial sums
+are
+\[
+S_f=-0.440708\pm0.873544\,i,\qquad S_h=-0.688937\pm0.063384\,i,
+\]
+with tails at most $\varepsilon=3.7\cdot10^{-6}$.  Then
+$\lvert G(S_f,S_h)\rvert\le2.5\cdot10^{-8}$.  Since
+$\lvert S_f\rvert$ and $\lvert S_h\rvert$ are at most $1$, each of the three monomials changes by
+at most $2\varepsilon+\varepsilon^2$ when the partial sums are replaced by the
+true values; the coefficients of $G$ have absolute sum $9$, so
+\[
+\lvert G(f(\tau_\pm),h(\tau_\pm))\rvert\le2.5\cdot10^{-8}+9(2\varepsilon+\varepsilon^2)\le6.7\cdot10^{-5},
+\qquad\nu_G(\tau_\pm)\le0.0043 .
+\]
+If $x_+$ and $x_-$ are conjugate then $\nu_G(\tau_+)\nu_G(\tau_-)<1$, and if
+each is rational then each $\nu_G<1$; in both cases $G$ vanishes at
+$\varphi(x_\pm)=(f(\tau_\pm):h(\tau_\pm))$.  As $h(\tau_\pm)\ne0$, the values
+$x(x_\pm)=S_f/S_h+O(10^{-5})=0.75\mp1.19896\,i$ are roots of $2x^2-3x+4$, one
+each, so the points are conjugate over $\Q(\sqrt{-23})$.
+\end{example}
+
+The routines in \texttt{src/cm\_certify.m} carry out these steps with rational
+balls in place of rounded decimals.
 
 \section{Numerical checks}\label{sec:num}
 
