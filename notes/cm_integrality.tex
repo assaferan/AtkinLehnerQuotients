@@ -412,6 +412,60 @@ $\lvert\prod_n(1-q^n)\rvert\ge1-\lvert q\rvert/(1-\lvert q\rvert)$ gives a lower
 bound for $T$ from one exponential.
 \end{remark}
 
+\subsection*{Genus two}
+When $g=2$ the curve $\Xs$ is hyperelliptic and the canonical map is not an
+embedding.  Write $S=\Q f\oplus\Q h$ with $f=q+\cdots$ and $h=q^2+\cdots$ up to
+scalars, and put
+\[
+x=f/h,\qquad W=h\,\theta f-f\,\theta h,\qquad y=W/h^3=\theta(x)/h .
+\]
+Then $x$ and $y$ are functions on $\Xs$ and $y^2=P(x)$ for a polynomial
+$P\in\Q[x]$ of degree $5$ or $6$; this is an identity between modular forms of
+weight $12$, $W^2=\sum_kc_kf^kh^{6-k}$, and is proved by comparing Fourier
+coefficients up to the Sturm bound.  The model lies in the weighted plane with
+weights $(1,3,1)$, and the points with $h=0$ are $[1:W/f^3:0]$.
+
+\begin{proposition}[Genus two]\label{prop:genus2}
+Let $g=2$, let $\tau_0$ be a point whose stabilizer has order $e$, with image
+$x_0\in\Xs$, and write $F_k=\theta^kF(\tau_0)$.  Put
+\[
+W^{\circ}=\bigl((e-1)!\bigr)^3\sum_{\substack{i+j=3e-2\\ e-1\le i,j\le 2e-1}}
+\frac{j-i}{i!\,j!}\;h_i\,f_j .
+\]
+Then the point of the model corresponding to $x_0$ is
+\[
+[\,f_{e-1}:W^{\circ}/h_{e-1}^{3}:h_{e-1}\,]\ \text{ if } h_{e-1}\ne0,
+\qquad
+[\,1:W^{\circ}/f_{e-1}^{3}:0\,]\ \text{ if } h_{e-1}=0 .
+\]
+\end{proposition}
+\begin{proof}
+The first and third coordinates are given by \eqref{eq:phi-ell}; in particular
+$f_k=h_k=0$ for $k<e-1$ and $(f_{e-1},h_{e-1})\ne(0,0)$.  Let
+$v=2\pi i(\tau-\tau_0)$, so that $F=\sum_kF_kv^k/k!$ and $\theta=d/dv$.  The
+coefficient of $v^n$ in $W=h\,f'-f\,h'$ is
+\[
+\sum_{i+j=n+1}(j-i)\,\frac{h_i}{i!}\,\frac{f_j}{j!},
+\]
+a sum over $i,j\ge e-1$.  Suppose $h_{e-1}\ne0$.  The function $y=W/h^3$ is
+finite at $x_0$, because $x(x_0)$ is finite and $y^2=P(x)$.  So $W$ vanishes
+at $\tau_0$ to order at least $3(e-1)$, the order of $h^3$, and $y(x_0)$ is
+the ratio of the coefficients of $v^{3(e-1)}$ in $W$ and in $h^3$.  The latter
+is $h_{e-1}^3/((e-1)!)^3$, and the former is the displayed sum with $n+1=3e-2$,
+in which $i,j\le 2e-1$.  If $h_{e-1}=0$ the same argument applies to $W/f^3$,
+which is the second coordinate in the chart $X=1$ and is finite on $Z=0$.
+\end{proof}
+
+\begin{remark}\label{rem:genus2}
+To prove that a rational point $[X:Y:Z]$ of the model, with $X,Z$ coprime
+integers, is the image of a rational CM point $x_0$: apply
+Corollary~\ref{cor:vanish} with $h=1$ to $F=Zf-Xh$, and check by an enclosure
+that $h_{e-1}\ne0$ (or $f_{e-1}\ne0$ when $Z=0$).  This gives $x(x_0)=X/Z$,
+hence $y(x_0)=\pm Y/Z^3$.  When $Y\ne0$ the sign is settled by an enclosure
+showing $Z^3W^{\circ}+Y\,h_{e-1}^3\ne0$ (respectively
+$X^3W^{\circ}+Y\,f_{e-1}^3\ne0$).  No integrality statement for $W$ is needed.
+\end{remark}
+
 \section{An explicit bound for Fourier coefficients}\label{sec:tail}
 
 A rigorous upper bound for $\lvert F(\tau)\rvert$ from a truncated $q$-expansion
